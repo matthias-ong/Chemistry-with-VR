@@ -1,4 +1,4 @@
-import {ActionManager, Engine, ExecuteCodeAction, MeshBuilder, Scene} from "babylonjs"
+import {Engine, MeshBuilder, Scene} from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 
 export class App {
@@ -19,14 +19,14 @@ export class App {
         sphere.position.y = 1;
         sphere.position.z = 5;
 
-        sphere.actionManager = new ActionManager(scene);
-        sphere.actionManager.registerAction(
-            new ExecuteCodeAction(ActionManager.OnPickTrigger, 
-            function (event) {
-                const moveSphere = event.meshUnderPointer;
-                moveSphere.position.x += 0.2;
-                moveSphere.position.y += 0.2;
-            }));
+        // sphere.actionManager = new ActionManager(scene);
+        // sphere.actionManager.registerAction(
+        //     new ExecuteCodeAction(ActionManager.OnPickTrigger, 
+        //     function (event) {
+        //         const moveSphere = event.meshUnderPointer;
+        //         moveSphere.position.x += 0.2;
+        //         moveSphere.position.y += 0.2;
+        //     }));
 
         // CREATE GROUND/TABLE
         const ground = MeshBuilder.CreateGround('ground', {width: 8, height: 8}, scene);
