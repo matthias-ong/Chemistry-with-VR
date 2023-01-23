@@ -20,6 +20,7 @@ module.exports = {
     devServer: {
         static: false,
         port: 3000,
+        server: "https"
     },
     plugins: [
         new HtmlWebpackPlugin({
