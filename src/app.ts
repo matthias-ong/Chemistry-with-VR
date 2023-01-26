@@ -5,13 +5,25 @@ export class App {
     private engine: Engine
     private canvas: HTMLCanvasElement
 
-    constructor(engine : Engine, canvas : HTMLCanvasElement) {
-        this.engine = engine
-        this.canvas = canvas
-        console.log("app is running")
+    constructor() {
+        console.log("app is init")
     }
 
-    async createScene() {
+    createXRScene(canvasID : HTMLCanvasElement, authoringData) {
+        this.engine = new Engine(canvasID, true)
+        this.canvas = canvasID
+        const scenePromise = this.createScene()
+
+        //async createScene returns a promise not an actual scene obj
+        //We need to create a callback function to run when the result is actually returned, after promise is fulfilled
+        scenePromise.then(scene => { 
+            this.engine.runRenderLoop(() => {
+            scene.render()
+    })
+})
+    }
+
+    async createScene() : Promise<Scene> {
         const scene = new Scene(this.engine)
         scene.createDefaultCameraOrLight()
 

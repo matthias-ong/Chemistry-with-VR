@@ -1,4 +1,3 @@
-import {Engine} from "babylonjs"
 import {App} from "./app"
 
 console.log("Hello XR!")
@@ -9,16 +8,8 @@ const canvas : HTMLCanvasElement = document.getElementById("renderCanvas") as HT
 // ctx.font = "50px Arial"
 // ctx.fillText("Hello XR!", 50, 50)
 
-const engine = new Engine(canvas, true)
-const app = new App(engine, canvas)
-const scenePromise = app.createScene() 
-// engine.runRenderLoop(() => {
-//     scene.render() //now that it is async createScene returns a promise not an actual scene obj
-// })
 
-//We need to create a callback function to run when the result is actually returned, after promise is fulfilled
-scenePromise.then(scene => {
-    engine.runRenderLoop(() => {
-        scene.render()
-    })
-})
+const app = new App()
+
+app.createXRScene(canvas, {})
+
