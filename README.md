@@ -1,5 +1,5 @@
 # CSD3120 IPA
-IPA for CSD3120 VR
+IPA for CSD3120 VR<br/>
 By: Matthias Ong Si En (2000987)
 
 ## Introduction
@@ -39,7 +39,6 @@ import {App} from "./app"   //replace "./" with the correct path to app.ts file
 Retrieve the HTMLCanvasElement using DOM like this:
 ```
 const canvas : HTMLCanvasElement = document.getElementById("renderCanvas") as HTMLCanvasElement
-
 ```
 Initialise an instance of the App class
 ```
