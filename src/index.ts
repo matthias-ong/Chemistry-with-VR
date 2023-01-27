@@ -1,13 +1,10 @@
-import {App} from "./app"
+import {App} from "./app" //Import App from app.ts file
 
-console.log("Hello XR!")
+console.log("Example Scene!")
 
-const canvas : HTMLCanvasElement = document.getElementById("renderCanvas") as HTMLCanvasElement
-
-// const ctx = canvas.getContext('2d')
-// ctx.font = "50px Arial"
-// ctx.fillText("Hello XR!", 50, 50)
+//Instantiate the imported App
 const app = new App()
 
-app.createXRScene(canvas, {})
+//Launch XR Scene and render to HTML Cavas Element with ID = "renderCanvas"
+app.createXRScene("renderCanvas", {})
 

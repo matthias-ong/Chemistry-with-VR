@@ -1,29 +1,53 @@
 import {Engine, MeshBuilder, Scene} from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 
+/**
+ * Comments follow Google's JSDOC guide at:
+ * http://google.github.io/styleguide/tsguide.html#comments-documentation
+ * 
+ * This is the App class that will be exported as a module. It contains all the implementation
+ * of the scene that will be used with the XRAuthor interface.
+ */
 export class App {
-    private engine: Engine
+    /** Contains the Babylon Engine instance */
+    private engine: Engine 
+    /** Contains the HTMLCanvasElement that will be rendered into */
     private canvas: HTMLCanvasElement
 
     constructor() {
         console.log("app is init")
     }
 
-    createXRScene(canvasID : HTMLCanvasElement, authoringData) {
-        this.engine = new Engine(canvasID, true)
-        this.canvas = canvasID
-        const scenePromise = this.createScene()
+    /**
+     * Renders the interactive AR/VR scene when user clicks the "XR Format" button in the
+     * XRAuthor interface
+     * @param canvasID is the string ID of the HTMLCanvasElement target to render the scene into
+     * @param authoringData is a dict of dicts that contains various information from other XRAuthor
+     *                      components, e.g. dicts of recordingData, editingData, etc.
+     */
+    createXRScene(canvasID : string, authoringData : {[data : string] : {[key : string] : any}}) {
+        this.canvas = document.getElementById(canvasID) as HTMLCanvasElement
+        this.engine = new Engine(this.canvas, true)
 
+        // const ctx = canvas.getContext('2d')
+        // ctx.font = "50px Arial"
+        // ctx.fillText("Hello XR!", 50, 50)
+
+        const scenePromise = this.createScene()
         //async createScene returns a promise not an actual scene obj
         //We need to create a callback function to run when the result is actually returned, after promise is fulfilled
         scenePromise.then(scene => { 
             this.engine.runRenderLoop(() => {
             scene.render()
-    })
-})
+            })
+        })
     }
 
-    async createScene() : Promise<Scene> {
+    /**
+     * Async helper function that is used to create the scene by initialising everything in the scene.
+     * @returns Promise<Scene>
+     */
+    private async createScene() : Promise<Scene> {
         const scene = new Scene(this.engine)
         scene.createDefaultCameraOrLight()
 
