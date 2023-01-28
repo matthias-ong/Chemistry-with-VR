@@ -52,7 +52,7 @@ You now have the 3D scene rendered onto the HTMLCanvas element.
 <!-- provide a code snippet of how the main.js file in the XRAuthor project can import your module and call the required function(s) to launch the immersive learning experience -->
 
 ## Link to video tutorial
-https://github.com/ToM4tto/CSD3120-IPA/blob/main/assets/synthesisDecomposition/videos/0.webm
+https://github.com/ToM4tto/CSD3120-IPA/blob/main/assets/synthesisDecompBalanced/videos/0.webm
 
 <!-- include a link to the video tutorial you recorded below -->
 
