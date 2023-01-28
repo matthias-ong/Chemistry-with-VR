@@ -13,8 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "babylonjs": "^5.42.2",
-    "babylonjs-gui": "^5.43.0"
+    "babylonjs": "^5.44.0",
+    "babylonjs-gui": "^5.44.0"
   },
   "devDependencies": {
     "html-webpack-plugin": "^5.5.0",
