@@ -13,6 +13,7 @@ export class App {
     private engine: Engine 
     /** Contains the HTMLCanvasElement that will be rendered into */
     private canvas: HTMLCanvasElement
+    private sound: Sound
 
     constructor() {
         console.log("app is init")
@@ -63,6 +64,8 @@ export class App {
 
         this.loadModel(scene)
         this.addSounds(scene)
+
+        this.createText(scene)
         this.createParticles(scene)
 
         // sphere.actionManager = new ActionManager(scene);
@@ -76,20 +79,6 @@ export class App {
 
         // CREATE GROUND/TABLE
         const ground = MeshBuilder.CreateGround('ground', {width: 8, height: 8}, scene);
-
-        //FONT RENDERING
-        const helloPlane = MeshBuilder.CreatePlane('hello plane', {size: 15})
-        helloPlane.position.y = 0;
-        helloPlane.position.z = 5;
-        
-        //create the texture for the helloPlane as text needs texture in babylon
-        const helloTexture = AdvancedDynamicTexture.CreateForMesh(helloPlane) 
-        const helloText = new TextBlock("hello")
-        helloText.text = "Hello XR"
-        helloText.color = "purple"
-        helloText.fontSize = 50
-        //pass the textBlock to show as texture
-        helloTexture.addControl(helloText)
 
         //this.createSkybox(scene)
         this.createVideoSkyDome(scene)
@@ -194,8 +183,9 @@ export class App {
 
     addSounds(scene: Scene) {
         const music = new Sound("music", "assets/sounds/music.mp3", scene, null, {
-            loop: true, autoplay: true
+            loop: true, autoplay: false
         })
+        this.sound = music
     }
 
     createLights(scene : Scene) {
@@ -206,6 +196,32 @@ export class App {
         const pointLight = new PointLight('pointLight', new Vector3(0, 1.5, 2), scene)
         pointLight.intensity = 1
         pointLight.diffuse = new Color3(1, 0, 0)
+    }
+
+    createText(scene: Scene) {
+        //FONT RENDERING
+        const helloPlane = MeshBuilder.CreatePlane('hello plane', {width: 2.5, height: 1})
+        helloPlane.position.y = 0;
+        helloPlane.position.z = 5;
+        
+        //create the texture for the helloPlane as text needs texture in babylon
+        const helloTexture = AdvancedDynamicTexture.CreateForMesh(helloPlane, 250, 100, false) 
+        helloTexture.background = "white"
+        const helloText = new TextBlock("hello")
+        helloText.text = "Hello XR"
+        helloText.color = "purple"
+        helloText.fontSize = 60
+        //pass the textBlock to show as texture
+        helloTexture.addControl(helloText)
+
+        //Add interaction to make it into a button
+        helloText.onPointerUpObservable.add(eventData => {
+            //alert("Hello Text at:\n x: " + eventData.x + " y:" + eventData)
+        })
+        //Works for VR controls too
+        helloText.onPointerDownObservable.add(()=> {
+            this.sound.play()
+        })
     }
 
     createSkybox(scene : Scene) {
