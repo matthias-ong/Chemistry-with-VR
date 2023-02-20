@@ -1,4 +1,4 @@
-import {AbstractMesh, Animation, ArcRotateCamera, Color3, Color4, CubeTexture, Engine, HemisphericLight, MeshBuilder, ParticleSystem, PointLight, Scene, SceneLoader, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome} from "babylonjs"
+import {AbstractMesh, Animation, ArcRotateCamera, Color3, Color4, CubeTexture, Engine, HemisphericLight, MeshBuilder, ParticleSystem, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome} from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import 'babylonjs-loaders'
 /**
@@ -62,6 +62,7 @@ export class App {
         sphere.position.z = 5;
 
         this.loadModel(scene)
+        this.addSounds(scene)
         this.createParticles(scene)
 
         // sphere.actionManager = new ActionManager(scene);
@@ -138,7 +139,8 @@ export class App {
             this.createAnimation(scene, root) //need call animation here during callback in anonymous function
 
         })
-        //async returns a promise so if you want to do transformation you need callback functions
+        //async functions are basically a promise so if you want to do transformation you need callback functions instead
+        //of calling transforms/anims after the importMesh function
     }
 
     createAnimation(scene: Scene, model: AbstractMesh) {
@@ -188,6 +190,12 @@ export class App {
 
         particleSystem.gravity = new Vector3(0, -9.8, 0)
         particleSystem.start()
+    }
+
+    addSounds(scene: Scene) {
+        const music = new Sound("music", "assets/sounds/music.mp3", scene, null, {
+            loop: true, autoplay: true
+        })
     }
 
     createLights(scene : Scene) {
