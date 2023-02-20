@@ -1,4 +1,4 @@
-import {Engine, MeshBuilder, Scene} from "babylonjs"
+import {Color3, CubeTexture, Engine, MeshBuilder, Scene, StandardMaterial, Texture} from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 
 /**
@@ -81,6 +81,8 @@ export class App {
         //pass the textBlock to show as texture
         helloTexture.addControl(helloText)
 
+        this.createSkybox(scene)
+
         //Enable XR to see the scene in VR/AR mode
         //async means you can run subsequent code even before this function returns (cos it may take a while)
         const xr = await scene.createDefaultXRExperienceAsync({
@@ -98,5 +100,22 @@ export class App {
 
 
         return scene
+    }
+
+    createSkybox(scene : Scene) {
+        const skybox = MeshBuilder.CreateBox('skybox', {size: 1000}, scene)
+        const skyboxMaterial = new StandardMaterial('skybox-mat')
+
+        skyboxMaterial.backFaceCulling = false //save some computational overheads
+
+        skyboxMaterial.reflectionTexture = new CubeTexture('assets/textures/skybox', scene)
+
+        //allow the material to know how to map the texture to the surface
+        skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
+
+        //set colours for the reflections
+        skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+        skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+        skybox.material = skyboxMaterial
     }
 }

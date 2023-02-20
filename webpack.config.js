@@ -18,7 +18,8 @@ module.exports = {
     mode: "development",
     devtool: 'inline-source-map', //see error msges (optional)
     devServer: {
-        static: false,
+        //static files e.g. non code, assets by default is true, you can specify a path though
+        //static: true, 
         port: 3000,
         server: "https"
     },
