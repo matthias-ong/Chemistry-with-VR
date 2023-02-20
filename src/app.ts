@@ -1,4 +1,4 @@
-import {ArcRotateCamera, Color3, CubeTexture, Engine, HemisphericLight, MeshBuilder, PointLight, Scene, StandardMaterial, Texture, UniversalCamera, Vector3} from "babylonjs"
+import {ArcRotateCamera, Color3, CubeTexture, Engine, HemisphericLight, MeshBuilder, PointLight, Scene, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome} from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 
 /**
@@ -83,7 +83,11 @@ export class App {
         //pass the textBlock to show as texture
         helloTexture.addControl(helloText)
 
-        this.createSkybox(scene)
+        //this.createSkybox(scene)
+        this.createVideoSkyDome(scene)
+
+        //enable debug tools
+        this.addInspectorKeyboardShortcut(scene)
 
         //Enable XR to see the scene in VR/AR mode
         //async means you can run subsequent code even before this function returns (cos it may take a while)
@@ -140,5 +144,33 @@ export class App {
         skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
         skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
         skybox.material = skyboxMaterial
+    }
+
+    createVideoSkyDome(scene : Scene) {
+        //create a Dome to encapsulate the video
+        const dome = new VideoDome(
+            "videoDome",
+            "assets/videos/bridge-360.mp4",
+            {
+                resolution: 32,
+                size: 1000
+            },
+            scene
+        )
+    }
+
+    //babylonJS has an inspector and we set a keyboard listener
+    //to open the inspector when we do CTRL-ALT-I
+    addInspectorKeyboardShortcut(scene: Scene) {
+        window.addEventListener("keydown", event => {
+            if (event.altKey && event.ctrlKey && event.key === "i") {
+                if (scene.debugLayer.isVisible()) {
+                    scene.debugLayer.hide()
+                }
+                else {
+                    scene.debugLayer.show()
+                }
+            }
+        })
     }
 }
