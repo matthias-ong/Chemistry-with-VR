@@ -1,7 +1,8 @@
-import { AbstractMesh, Animation, ArcRotateCamera, Color3, Color4, CubeTexture, Engine, HemisphericLight, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
+import { AbstractMesh, Animation, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerDragBehavior, PointerEventTypes, PointLight, PoseEnabledController, PostProcessesOptimization, Scene, SceneLoader, Sound, StandardMaterial, Texture, Vector3, VideoDome, VideoTexture } from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
+import { animationPointerTree } from "babylonjs-loaders/glTF/2.0/Extensions/KHR_animation_pointer.data"
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
@@ -36,17 +37,15 @@ export class App {
         //create custom camera to see our skybox w/ rotation
         this.createCamera(scene)
         this.createLights(scene)
-        const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.3 }, scene)
-        sphere.position.y = 1;
-        sphere.position.z = 5;
 
-        this.loadModel(scene)
+        //this.loadModel(scene)
         //this.addSounds(scene)
 
         this.createText(scene)
         //this.createParticles(scene)
 
-        this.createLessonVideo(scene)
+        this.playXRAuthorVideo(scene)
+        this.playXRAuthorAnimation(scene)
 
         // CREATE GROUND/TABLE
         const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
@@ -77,7 +76,7 @@ export class App {
         return scene
     }
 
-    createLessonVideo(scene: Scene) {
+    playXRAuthorVideo(scene: Scene) {
         const videoHeight = 5
         const videoWidth = videoHeight * this.data.recordingData.aspectRatio
         const videoPlane = MeshBuilder.CreatePlane("video plane", {
@@ -97,6 +96,7 @@ export class App {
         videoMaterial.emissiveColor = Color3.White()
         videoPlane.material = videoMaterial
 
+        // ---------------- VIDEO CONTROLS ----------------
         //VideoTexture is not part of gui need implement controls manually
         //we add callbacks to observers of scene
         scene.onPointerObservable.add(eventData => {
@@ -115,6 +115,40 @@ export class App {
             }
         }, PointerEventTypes.POINTERPICK //filter ONLY pick events calls this callback (by mouse or any pointer)
         )
+    }
+
+    playXRAuthorAnimation(scene: Scene) {
+
+        const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.3 }, scene)
+        sphere.position.y = 1;
+        sphere.position.z = 5;
+
+        const id = "m11"
+        const track = this.data.recordingData.animation.tracks[id]
+        //convert A-Frame animation (matrices and time) used in XRAuthor to BabylonJS (frame idx)
+        const length = track.times.length //how many frames
+        const fps = length / this.data.recordingData.animation.duration
+        //babylon js doesnt manipulate matrices directly, if we want to manipulate the pos/scale/rot, we need to extract them from the matrix and get the vector
+        const keyframes = []
+        for (let i = 0; i < length; i++) {
+            //1 matrix 1 frame, stored in a json file in a simple array by Prof
+            const mat = Matrix.FromArray(track.matrices[i].elements)
+            const position = mat.getTranslation()
+            //convert position from Right handed (AFrame) to Left Handed (babylonjs)
+            position.z = -position.z
+
+            //move to video plane
+            const s = 6 / position.z //desired depth / depth
+            keyframes.push({
+                //time * fps = frame idx
+                frame: track.times[i] * fps, //gets you frame idx
+                value: position.scale(s).multiplyByFloats(3, 3, 1)
+            })
+        }
+        const animation = new Animation("animation", "position", fps, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE)
+        animation.setKeys(keyframes)
+        sphere.animations = [animation]
+        scene.beginAnimation(sphere, 0, length - 1, true)
     }
 
     createCamera(scene: Scene) {
