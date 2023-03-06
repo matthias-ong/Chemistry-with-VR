@@ -1,8 +1,7 @@
-import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerDragBehavior, PointerEventTypes, PointLight, PoseEnabledController, PostProcessesOptimization, Scene, SceneLoader, Sound, StandardMaterial, Texture, Vector3, VideoDome, VideoTexture } from "babylonjs"
+import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, Vector3, VideoDome, VideoTexture } from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
-import { animationPointerTree } from "babylonjs-loaders/glTF/2.0/Extensions/KHR_animation_pointer.data"
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
@@ -155,7 +154,21 @@ export class App {
         //scene.beginAnimation(sphere, 0, length - 1, true)
         //Create animation group instead, for control over multiple models
         this.animationGroup = new AnimationGroup("animation group", scene)
-        this.animationGroup.addTargetedAnimation(animation, sphere)
+        //Animating our video models
+        const info = this.data.recordingData.modelInfo[id]
+        const label = info.label
+        const name = info.name
+        const url = this.data.models[name]
+        //dont need ImportMesh as its already loaded from XRAuthor authoring data, load from url
+        SceneLoader.AppendAsync(url, undefined, scene, undefined, ".glb").then(result => {
+            //glb or gltf models, BabylonJS will add a root object to model
+            const root = result.getMeshById("__root__")
+            root.id = id + ": " + label //make a unique ID instead of everybody sharing root
+            root.name = label
+            this.animationGroup.addTargetedAnimation(animation, root)
+            //init starting pos
+            this.animationGroup.reset() //reset to first frame
+        })
     }
 
     createCamera(scene: Scene) {
