@@ -1,5 +1,6 @@
-import { AbstractMesh, Animation, ArcRotateCamera, Color3, Color4, CubeTexture, Engine, HemisphericLight, MeshBuilder, ParticleSystem, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome } from "babylonjs"
+import { AbstractMesh, Animation, ArcRotateCamera, Color3, Color4, CubeTexture, Engine, HemisphericLight, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
+import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 /**
  * Comments follow Google's JSDOC guide at:
@@ -14,10 +15,10 @@ export class App {
     /** Contains the HTMLCanvasElement that will be rendered into */
     private canvas: HTMLCanvasElement
     private sound: Sound
-    private data: { [data: string]: { [key: string]: any } }
+    private data: AuthoringData
 
     constructor(engine: Engine, canvas: HTMLCanvasElement
-        , authoringData: { [data: string]: { [key: string]: any } }) {
+        , authoringData: AuthoringData) {
         console.log("app is init")
         this.engine = engine;
         this.canvas = canvas;
@@ -29,6 +30,7 @@ export class App {
      * @returns Promise<Scene>
      */
     async createScene(): Promise<Scene> {
+        console.log(this.data)
         const scene = new Scene(this.engine)
         //scene.createDefaultCameraOrLight()
         //create custom camera to see our skybox w/ rotation
@@ -39,25 +41,18 @@ export class App {
         sphere.position.z = 5;
 
         this.loadModel(scene)
-        this.addSounds(scene)
+        //this.addSounds(scene)
 
         this.createText(scene)
-        this.createParticles(scene)
+        //this.createParticles(scene)
 
-        // sphere.actionManager = new ActionManager(scene);
-        // sphere.actionManager.registerAction(
-        //     new ExecuteCodeAction(ActionManager.OnPickTrigger, 
-        //     function (event) {
-        //         const moveSphere = event.meshUnderPointer;
-        //         moveSphere.position.x += 0.2;
-        //         moveSphere.position.y += 0.2;
-        //     }));
+        this.createLessonVideo(scene)
 
         // CREATE GROUND/TABLE
         const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
 
         //this.createSkybox(scene)
-        this.createVideoSkyDome(scene)
+        //this.createVideoSkyDome(scene)
 
         //enable debug tools
         this.addInspectorKeyboardShortcut(scene)
@@ -69,16 +64,57 @@ export class App {
                 sessionMode: "immersive-vr" //create scene in VR mode
             }
         });
-        //if you want to call xr's member functions, you need to await to wait for async function to actually return sth before calling it
+        /*if you want to call xr's member functions, you need to await to wait for async function to actually return sth before calling it
 
-        //2 solutions, using await or declare a callback function to the promise e.g in index.ts
+        2 solutions, using await or declare a callback function to the promise e.g in index.ts
 
-        //only for debugging - pass xr to window object
-        //Add properties to Window object to access them in the console
+        only for debugging - pass xr to window object
+        Add properties to Window object to access them in the console
+        */
         (window as any).xr = xr //cast the window obj to be any
 
 
         return scene
+    }
+
+    createLessonVideo(scene: Scene) {
+        const videoHeight = 5
+        const videoWidth = videoHeight * this.data.recordingData.aspectRatio
+        const videoPlane = MeshBuilder.CreatePlane("video plane", {
+            height: videoHeight,
+            width: videoWidth
+        }, scene)
+        videoPlane.position.z = 6 //put plane behind the text
+
+        const videoTexture = new VideoTexture("video texture", this.data.video, scene)
+        videoTexture.video.autoplay = false
+        //prevents the video from playing a split second even if autoplay is false, as that may cause browser to mute the video
+        videoTexture.onUserActionRequestedObservable.add(() => { })
+
+        const videoMaterial = new StandardMaterial("video material", scene)
+        videoMaterial.diffuseTexture = videoTexture
+        videoMaterial.roughness = 1
+        videoMaterial.emissiveColor = Color3.White()
+        videoPlane.material = videoMaterial
+
+        //VideoTexture is not part of gui need implement controls manually
+        //we add callbacks to observers of scene
+        scene.onPointerObservable.add(eventData => {
+            //console.log("picked")
+            if (eventData.pickInfo.pickedMesh === videoPlane) {
+                if (videoTexture.video.paused) {
+                    videoTexture.video.play()
+                }
+                else {
+                    videoTexture.video.pause()
+                }
+                console.log(videoTexture.video.paused ? "paused" : "playing")
+            }
+            else {
+                console.log(eventData.pickInfo.pickedMesh)
+            }
+        }, PointerEventTypes.POINTERPICK //filter ONLY pick events calls this callback (by mouse or any pointer)
+        )
     }
 
     createCamera(scene: Scene) {
@@ -87,9 +123,10 @@ export class App {
         //rotation and the distance from the target position.
         //const camera = new ArcRotateCamera("arcCamera", -Math.PI/5, Math.PI/2, 5, Vector3.Zero(), scene)
         //Arc rotate camera cannot MOVE, if we want FPS style we need UniversalCamera
-        const camera = new UniversalCamera('uniCam', new Vector3(0, 0, -5), scene)
+        //const camera = new UniversalCamera('uniCam', new Vector3(0, 0, -5), scene)
+        scene.createDefaultCamera(false, true, true)
         //attach control to enable user inputs from canvas
-        camera.attachControl(this.canvas, true)
+        //camera.attachControl(this.canvas, true)
     }
 
     loadModel(scene: Scene) {

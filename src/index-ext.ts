@@ -9,4 +9,4 @@ import { createXRScene } from "./init"
 window['extension'] = { createXRScene: createXRScene }
 //When XRAuthor loads the "extension"
 
-//console.log("xrauthor-extension entrypoint init")
+console.log("xrauthor-extension entrypoint init")

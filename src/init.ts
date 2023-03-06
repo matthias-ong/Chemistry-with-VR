@@ -1,4 +1,5 @@
 import { Engine } from "babylonjs"
+import { AuthoringData } from "xrauthor-loader"
 import { App } from "./app" //Import App from app.ts file
 /**
  * This file servers as a common entry point to initialise the app either as 
@@ -12,7 +13,8 @@ import { App } from "./app" //Import App from app.ts file
      * @param authoringData is a dict of dicts that contains various information from other XRAuthor
      *                      components, e.g. dicts of recordingData, editingData, etc.
      */
-export function createXRScene(canvasID: string, authoringData: { [data: string]: { [key: string]: any } }) {
+//{ [data: string]: { [key: string]: any } }
+export function createXRScene(canvasID: string, authoringData: AuthoringData) {
     console.log("Init!")
     const canvas = document.getElementById(canvasID) as HTMLCanvasElement
     const engine = new Engine(canvas, true)
