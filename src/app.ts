@@ -1,4 +1,4 @@
-import { AbstractMesh, Animation, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerDragBehavior, PointerEventTypes, PointLight, PoseEnabledController, PostProcessesOptimization, Scene, SceneLoader, Sound, StandardMaterial, Texture, Vector3, VideoDome, VideoTexture } from "babylonjs"
+import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerDragBehavior, PointerEventTypes, PointLight, PoseEnabledController, PostProcessesOptimization, Scene, SceneLoader, Sound, StandardMaterial, Texture, Vector3, VideoDome, VideoTexture } from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
@@ -17,6 +17,7 @@ export class App {
     private canvas: HTMLCanvasElement
     private sound: Sound
     private data: AuthoringData
+    private animationGroup: AnimationGroup
 
     constructor(engine: Engine, canvas: HTMLCanvasElement
         , authoringData: AuthoringData) {
@@ -44,8 +45,8 @@ export class App {
         this.createText(scene)
         //this.createParticles(scene)
 
-        this.playXRAuthorVideo(scene)
         this.playXRAuthorAnimation(scene)
+        this.playXRAuthorVideo(scene)
 
         // CREATE GROUND/TABLE
         const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
@@ -104,9 +105,11 @@ export class App {
             if (eventData.pickInfo.pickedMesh === videoPlane) {
                 if (videoTexture.video.paused) {
                     videoTexture.video.play()
+                    this.animationGroup.play(true)
                 }
                 else {
                     videoTexture.video.pause()
+                    this.animationGroup.pause()
                 }
                 console.log(videoTexture.video.paused ? "paused" : "playing")
             }
@@ -128,7 +131,7 @@ export class App {
         //convert A-Frame animation (matrices and time) used in XRAuthor to BabylonJS (frame idx)
         const length = track.times.length //how many frames
         const fps = length / this.data.recordingData.animation.duration
-        //babylon js doesnt manipulate matrices directly, if we want to manipulate the pos/scale/rot, we need to extract them from the matrix and get the vector
+        //babylon js doesnt manipulate matrices directly, if we want to manipulate the pos/scale/rot, we need to extract them from the matrix and get the vector if we need them
         const keyframes = []
         for (let i = 0; i < length; i++) {
             //1 matrix 1 frame, stored in a json file in a simple array by Prof
@@ -137,18 +140,22 @@ export class App {
             //convert position from Right handed (AFrame) to Left Handed (babylonjs)
             position.z = -position.z
 
-            //move to video plane
+            //move to video plane, by scaling the animation coords, like a perspective proj, the math here is not impt according to prof
             const s = 6 / position.z //desired depth / depth
             keyframes.push({
                 //time * fps = frame idx
                 frame: track.times[i] * fps, //gets you frame idx
+                //experiment with the numbers to get the pos you want
                 value: position.scale(s).multiplyByFloats(3, 3, 1)
             })
         }
         const animation = new Animation("animation", "position", fps, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE)
         animation.setKeys(keyframes)
-        sphere.animations = [animation]
-        scene.beginAnimation(sphere, 0, length - 1, true)
+        //sphere.animations = [animation]
+        //scene.beginAnimation(sphere, 0, length - 1, true)
+        //Create animation group instead, for control over multiple models
+        this.animationGroup = new AnimationGroup("animation group", scene)
+        this.animationGroup.addTargetedAnimation(animation, sphere)
     }
 
     createCamera(scene: Scene) {
