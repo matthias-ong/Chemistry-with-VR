@@ -1,4 +1,4 @@
-import {App} from "./app" //Import App from app.ts file
+import { App } from "./app" //Import App from app.ts file
 
 console.log("Example Scene!")
 

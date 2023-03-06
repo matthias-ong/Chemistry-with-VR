@@ -14,7 +14,7 @@
             "es2015.promise",
             "es5"
         ],
-        "declaration": true,
+        //"declaration": true, //generate .d.ts files
         "outDir": "./src",
         "types": [
             "babylonjs",
