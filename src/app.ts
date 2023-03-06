@@ -2,6 +2,7 @@ import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, E
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
+import { Mesh } from "babylonjs/Meshes/mesh"
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
@@ -16,7 +17,11 @@ export class App {
     private canvas: HTMLCanvasElement
     private sound: Sound
     private data: AuthoringData
+
+    //TEMP GLOBALS
     private animationGroup: AnimationGroup
+    private helloPlane: Mesh
+    private helloText: TextBlock
 
     constructor(engine: Engine, canvas: HTMLCanvasElement
         , authoringData: AuthoringData) {
@@ -165,6 +170,11 @@ export class App {
             const root = result.getMeshById("__root__")
             root.id = id + ": " + label //make a unique ID instead of everybody sharing root
             root.name = label
+            this.helloPlane.position.setAll(0)
+            this.helloPlane.position.y = -0.5 // a bit below model
+            this.helloPlane.position.z = -0.1 // a bit before
+            this.helloPlane.setParent(root)
+            this.helloText.text = label
             this.animationGroup.addTargetedAnimation(animation, root)
             //init starting pos
             this.animationGroup.reset() //reset to first frame
@@ -211,7 +221,6 @@ export class App {
             { frame: 30, value: new Vector3(0, 2 * Math.PI, 0) }
         ]
         animation.setKeys(keyframes)
-
         model.animations = []
         model.animations.push(animation) //1 model can have more than 1 animations
         scene.beginAnimation(model, 0, 30, true)
@@ -267,26 +276,26 @@ export class App {
 
     createText(scene: Scene) {
         //FONT RENDERING
-        const helloPlane = MeshBuilder.CreatePlane('hello plane', { width: 2.5, height: 1 })
-        helloPlane.position.y = 0;
-        helloPlane.position.z = 5;
+        this.helloPlane = MeshBuilder.CreatePlane('hello plane', { width: 2.5, height: 1 })
+        this.helloPlane.position.y = 0;
+        this.helloPlane.position.z = 5;
 
         //create the texture for the helloPlane as text needs texture in babylon
-        const helloTexture = AdvancedDynamicTexture.CreateForMesh(helloPlane, 250, 100, false)
-        helloTexture.background = "white"
-        const helloText = new TextBlock("hello")
-        helloText.text = "Hello XR"
-        helloText.color = "purple"
-        helloText.fontSize = 60
+        const helloTexture = AdvancedDynamicTexture.CreateForMesh(this.helloPlane, 250, 100, false)
+        //helloTexture.background = "white"
+        this.helloText = new TextBlock("hello")
+        this.helloText.text = "Hello XR"
+        this.helloText.color = "purple"
+        this.helloText.fontSize = 60
         //pass the textBlock to show as texture
-        helloTexture.addControl(helloText)
+        helloTexture.addControl(this.helloText)
 
         //Add interaction to make it into a button
-        helloText.onPointerUpObservable.add(eventData => {
+        this.helloText.onPointerUpObservable.add(eventData => {
             //alert("Hello Text at:\n x: " + eventData.x + " y:" + eventData)
         })
         //Works for VR controls too
-        helloText.onPointerDownObservable.add(() => {
+        this.helloText.onPointerDownObservable.add(() => {
             this.sound.play()
         })
     }
