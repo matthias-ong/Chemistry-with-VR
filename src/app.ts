@@ -1,4 +1,4 @@
-import {AbstractMesh, Animation, ArcRotateCamera, Color3, Color4, CubeTexture, Engine, HemisphericLight, MeshBuilder, ParticleSystem, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome} from "babylonjs"
+import { AbstractMesh, Animation, ArcRotateCamera, Color3, Color4, CubeTexture, Engine, HemisphericLight, MeshBuilder, ParticleSystem, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome } from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import 'babylonjs-loaders'
 /**
@@ -10,55 +10,31 @@ import 'babylonjs-loaders'
  */
 export class App {
     /** Contains the Babylon Engine instance */
-    private engine: Engine 
+    private engine: Engine
     /** Contains the HTMLCanvasElement that will be rendered into */
     private canvas: HTMLCanvasElement
     private sound: Sound
+    private data: { [data: string]: { [key: string]: any } }
 
-    constructor() {
+    constructor(engine: Engine, canvas: HTMLCanvasElement
+        , authoringData: { [data: string]: { [key: string]: any } }) {
         console.log("app is init")
-    }
-
-    /**
-     * Renders the interactive AR/VR scene when user clicks the "XR Format" button in the
-     * XRAuthor interface
-     * @param canvasID is the string ID of the HTMLCanvasElement target to render the scene into
-     * @param authoringData is a dict of dicts that contains various information from other XRAuthor
-     *                      components, e.g. dicts of recordingData, editingData, etc.
-     */
-    createXRScene(canvasID : string, authoringData : {[data : string] : {[key : string] : any}}) {
-        this.canvas = document.getElementById(canvasID) as HTMLCanvasElement
-        this.engine = new Engine(this.canvas, true)
-
-        // const ctx = canvas.getContext('2d')
-        // ctx.font = "50px Arial"
-        // ctx.fillText("Hello XR!", 50, 50)
-
-        const scenePromise = this.createScene()
-        //async createScene returns a promise not an actual scene obj
-        //We need to create a callback function to run when the result is actually returned, after promise is fulfilled
-        scenePromise.then(scene => { 
-            this.engine.runRenderLoop(() => {
-            scene.render()
-            })
-        })
-
-        window.addEventListener("resize", () => {
-            this.engine.resize()
-        })
+        this.engine = engine;
+        this.canvas = canvas;
+        this.data = authoringData
     }
 
     /**
      * Async helper function that is used to create the scene by initialising everything in the scene.
      * @returns Promise<Scene>
      */
-    private async createScene() : Promise<Scene> {
+    async createScene(): Promise<Scene> {
         const scene = new Scene(this.engine)
         //scene.createDefaultCameraOrLight()
         //create custom camera to see our skybox w/ rotation
         this.createCamera(scene)
         this.createLights(scene)
-        const sphere = MeshBuilder.CreateSphere('sphere', {diameter: 1.3}, scene)
+        const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.3 }, scene)
         sphere.position.y = 1;
         sphere.position.z = 5;
 
@@ -78,7 +54,7 @@ export class App {
         //     }));
 
         // CREATE GROUND/TABLE
-        const ground = MeshBuilder.CreateGround('ground', {width: 8, height: 8}, scene);
+        const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
 
         //this.createSkybox(scene)
         this.createVideoSkyDome(scene)
@@ -105,7 +81,7 @@ export class App {
         return scene
     }
 
-    createCamera(scene : Scene) {
+    createCamera(scene: Scene) {
         //Think of this camera as one orbiting its target position. relative position to the target 
         //can be set by three parameters, alpha (radians) the longitudinal rotation, beta (radians) the latitudinal 
         //rotation and the distance from the target position.
@@ -116,7 +92,7 @@ export class App {
         camera.attachControl(this.canvas, true)
     }
 
-    loadModel(scene : Scene) {
+    loadModel(scene: Scene) {
         //async so the loading doesnt stall
         SceneLoader.ImportMeshAsync("", "assets/synthesisDecompBalanced/models/", "H2O.glb", scene).then(result => {
             const root = result.meshes[0]
@@ -140,8 +116,8 @@ export class App {
         )
         //define the keyframes for the animation
         const keyframes = [
-            {frame: 0, value: new Vector3(0,0,0)},
-            {frame: 30, value: new Vector3(0,2 * Math.PI, 0)}
+            { frame: 0, value: new Vector3(0, 0, 0) },
+            { frame: 30, value: new Vector3(0, 2 * Math.PI, 0) }
         ]
         animation.setKeys(keyframes)
 
@@ -154,10 +130,10 @@ export class App {
         const particleSystem = new ParticleSystem("particles", 5000, scene)
         particleSystem.particleTexture = new Texture("assets/textures/flare.png", scene)
 
-        particleSystem.emitter = new Vector3(0,0,0)
-        particleSystem.minEmitBox = new Vector3(0,0,0)
-        particleSystem.maxEmitBox = new Vector3(0,0,0) //a point
-        
+        particleSystem.emitter = new Vector3(0, 0, 0)
+        particleSystem.minEmitBox = new Vector3(0, 0, 0)
+        particleSystem.maxEmitBox = new Vector3(0, 0, 0) //a point
+
         //blends the colours based on their lifecycle
         particleSystem.color1 = new Color4(0.7, 0.8, 1.0, 1.0)
         particleSystem.color2 = new Color4(0.3, 0.5, 1.0, 1.0)
@@ -188,7 +164,7 @@ export class App {
         this.sound = music
     }
 
-    createLights(scene : Scene) {
+    createLights(scene: Scene) {
         const hemiLight = new HemisphericLight('hemLight', new Vector3(-1, 1, 0), scene)
         hemiLight.intensity = 0.3
         hemiLight.diffuse = new Color3(1, 1, 1)
@@ -200,12 +176,12 @@ export class App {
 
     createText(scene: Scene) {
         //FONT RENDERING
-        const helloPlane = MeshBuilder.CreatePlane('hello plane', {width: 2.5, height: 1})
+        const helloPlane = MeshBuilder.CreatePlane('hello plane', { width: 2.5, height: 1 })
         helloPlane.position.y = 0;
         helloPlane.position.z = 5;
-        
+
         //create the texture for the helloPlane as text needs texture in babylon
-        const helloTexture = AdvancedDynamicTexture.CreateForMesh(helloPlane, 250, 100, false) 
+        const helloTexture = AdvancedDynamicTexture.CreateForMesh(helloPlane, 250, 100, false)
         helloTexture.background = "white"
         const helloText = new TextBlock("hello")
         helloText.text = "Hello XR"
@@ -219,13 +195,13 @@ export class App {
             //alert("Hello Text at:\n x: " + eventData.x + " y:" + eventData)
         })
         //Works for VR controls too
-        helloText.onPointerDownObservable.add(()=> {
+        helloText.onPointerDownObservable.add(() => {
             this.sound.play()
         })
     }
 
-    createSkybox(scene : Scene) {
-        const skybox = MeshBuilder.CreateBox('skybox', {size: 1000}, scene)
+    createSkybox(scene: Scene) {
+        const skybox = MeshBuilder.CreateBox('skybox', { size: 1000 }, scene)
         const skyboxMaterial = new StandardMaterial('skybox-mat')
 
         skyboxMaterial.backFaceCulling = false //save some computational overheads
@@ -241,7 +217,7 @@ export class App {
         skybox.material = skyboxMaterial
     }
 
-    createVideoSkyDome(scene : Scene) {
+    createVideoSkyDome(scene: Scene) {
         //create a Dome to encapsulate the video
         const dome = new VideoDome(
             "videoDome",

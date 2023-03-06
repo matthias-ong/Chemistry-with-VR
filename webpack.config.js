@@ -20,7 +20,7 @@ module.exports = {
     devServer: {
         //static files e.g. non code, assets by default is true, you can specify a path though
         //static: true, 
-        port: 3000,
+        port: 3001,
         server: "https"
     },
     plugins: [
