@@ -11,12 +11,11 @@ import { Mesh } from "babylonjs/Meshes/mesh"
  * of the scene that will be used with the XRAuthor interface.
  */
 export class App {
-    /** Contains the Babylon Engine instance */
-    private engine: Engine
-    /** Contains the HTMLCanvasElement that will be rendered into */
-    private canvas: HTMLCanvasElement
+    private engine: Engine /** Contains the Babylon Engine instance */
+    private canvas: HTMLCanvasElement /** Contains the HTMLCanvasElement that will be rendered into */
     private sound: Sound
-    private data: AuthoringData
+    private data: AuthoringData /** Authoring data from  XRAuthor */
+    private videoPlane: Mesh /** Plane to render video on */
 
     //TEMP GLOBALS
     private animationGroup: AnimationGroup
@@ -49,8 +48,8 @@ export class App {
         this.createText(scene)
         //this.createParticles(scene)
 
-        this.playXRAuthorAnimation(scene)
         this.playXRAuthorVideo(scene)
+        this.playXRAuthorAnimation(scene)
 
         // CREATE GROUND/TABLE
         const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
@@ -84,11 +83,11 @@ export class App {
     playXRAuthorVideo(scene: Scene) {
         const videoHeight = 5
         const videoWidth = videoHeight * this.data.recordingData.aspectRatio
-        const videoPlane = MeshBuilder.CreatePlane("video plane", {
+        this.videoPlane = MeshBuilder.CreatePlane("video plane", {
             height: videoHeight,
             width: videoWidth
         }, scene)
-        videoPlane.position.z = 6 //put plane behind the text
+        this.videoPlane.position.z = 6 //put plane behind the text
 
         const videoTexture = new VideoTexture("video texture", this.data.video, scene)
         videoTexture.video.autoplay = false
@@ -99,14 +98,14 @@ export class App {
         videoMaterial.diffuseTexture = videoTexture
         videoMaterial.roughness = 1
         videoMaterial.emissiveColor = Color3.White()
-        videoPlane.material = videoMaterial
+        this.videoPlane.material = videoMaterial
 
         // ---------------- VIDEO CONTROLS ----------------
         //VideoTexture is not part of gui need implement controls manually
         //we add callbacks to observers of scene
         scene.onPointerObservable.add(eventData => {
             //console.log("picked")
-            if (eventData.pickInfo.pickedMesh === videoPlane) {
+            if (eventData.pickInfo?.pickedMesh === this.videoPlane) {
                 if (videoTexture.video.paused) {
                     videoTexture.video.play()
                     this.animationGroup.play(true)
@@ -118,12 +117,16 @@ export class App {
                 console.log(videoTexture.video.paused ? "paused" : "playing")
             }
             else {
-                console.log(eventData.pickInfo.pickedMesh)
+                console.log(eventData.pickInfo?.pickedMesh)
             }
         }, PointerEventTypes.POINTERPICK //filter ONLY pick events calls this callback (by mouse or any pointer)
         )
     }
 
+    /**
+     * This function plays animation on the 3D molecules such that they follow the video markers
+     * @param scene 
+     */
     playXRAuthorAnimation(scene: Scene) {
 
         const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.3 }, scene)
@@ -136,20 +139,18 @@ export class App {
         const length = track.times.length //how many frames
         const fps = length / this.data.recordingData.animation.duration
         //babylon js doesnt manipulate matrices directly, if we want to manipulate the pos/scale/rot, we need to extract them from the matrix and get the vector if we need them
-        const keyframes = []
+        const keyframes: { frame: number; value: Vector3; }[] = [];
         for (let i = 0; i < length; i++) {
             //1 matrix 1 frame, stored in a json file in a simple array by Prof
             const mat = Matrix.FromArray(track.matrices[i].elements)
             const position = mat.getTranslation()
-            //convert position from Right handed (AFrame) to Left Handed (babylonjs)
-            position.z = -position.z
-
-            //move to video plane, by scaling the animation coords, like a perspective proj, the math here is not impt according to prof
-            const s = 6 / position.z //desired depth / depth
+            position.z = -position.z //convert position from Right handed (AFrame) to Left Handed (babylonjs)
+            //moving the animation from the recorded z to the video plane's z in the current scene
+            const s = this.videoPlane.position.z / position.z //desired depth / depth
             keyframes.push({
                 //time * fps = frame idx
                 frame: track.times[i] * fps, //gets you frame idx
-                //experiment with the numbers to get the pos you want
+                //different sizes of the video planes used in the xrauthor scene and the babylonjs scene's videoPlane, need rescale
                 value: position.scale(s).multiplyByFloats(3, 3, 1)
             })
         }
