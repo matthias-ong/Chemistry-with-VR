@@ -1,4 +1,4 @@
-import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation } from "babylonjs";
+import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior } from "babylonjs";
 import { Mesh } from "babylonjs/Meshes/mesh";
 import { Scene } from "babylonjs/scene";
 import { AuthoringData } from "xrauthor-loader";
@@ -63,6 +63,18 @@ export class XRAuthorTutorialAnimation {
                     this.animationGroup.addTargetedAnimation(animation, root)
                     //init starting pos
                     this.animationGroup.reset() //reset to first frame
+
+                    //interactions
+                    // use behaviours
+                    const pointerDragBehaviour = new PointerDragBehavior({
+                        dragPlaneNormal: new Vector3(0, 0, 1), // pointing in positive z direction,
+                    })
+                    //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
+                    pointerDragBehaviour.onDragStartObservable.add(evtData => {
+                        console.log("Drag start: pointer id = " + evtData.pointerId)
+                        console.log(evtData)
+                    })
+                    root.addBehavior(pointerDragBehaviour)
                 }
                 else {
                     console.log("TutorialAnimation: Root is NULL!")
