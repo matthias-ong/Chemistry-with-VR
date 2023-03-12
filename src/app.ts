@@ -1,8 +1,8 @@
 import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, Vector3, VideoDome, VideoTexture } from "babylonjs"
-import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 import { Mesh } from "babylonjs/Meshes/mesh"
+import { TextPlane } from "./components/meshes"
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
@@ -19,8 +19,6 @@ export class App {
 
     //TEMP GLOBALS
     private animationGroup: AnimationGroup
-    private helloPlane: Mesh
-    private helloText: TextBlock
 
     constructor(engine: Engine, canvas: HTMLCanvasElement
         , authoringData: AuthoringData) {
@@ -37,15 +35,9 @@ export class App {
     async createScene(): Promise<Scene> {
         console.log(this.data)
         const scene = new Scene(this.engine)
-        //scene.createDefaultCameraOrLight()
-        //create custom camera to see our skybox w/ rotation
+        //create camera to see our world
         this.createCamera(scene)
         this.createLights(scene)
-
-        //this.loadModel(scene)
-        //this.addSounds(scene)
-
-        this.createText(scene)
         //this.createParticles(scene)
 
         this.playXRAuthorVideo(scene)
@@ -60,26 +52,24 @@ export class App {
         //enable debug tools
         this.addInspectorKeyboardShortcut(scene)
 
-        //Enable XR to see the scene in VR/AR mode
         //async means you can run subsequent code even before this function returns (cos it may take a while)
         const xr = await scene.createDefaultXRExperienceAsync({
             uiOptions: {
-                sessionMode: "immersive-vr" //create scene in VR mode
+                sessionMode: "immersive-vr" //Enable XR to see the scene in VR/AR mode
             }
         });
-        /*if you want to call xr's member functions, you need to await to wait for async function to actually return sth before calling it
-
-        2 solutions, using await or declare a callback function to the promise e.g in index.ts
-
-        only for debugging - pass xr to window object
-        Add properties to Window object to access them in the console
-        */
+        /*if you want to call xr's member functions, you need to await to wait for async function to actually return sth before calling it, 
+        using await or declare a callback function to the promise e.g then()
+        
+        /*for debugging on browser console - pass xr to window object*/
         (window as any).xr = xr //cast the window obj to be any
-
-
         return scene
     }
 
+    /**
+     * This function will play the instruction video on the videoPlane
+     * @param scene 
+     */
     playXRAuthorVideo(scene: Scene) {
         const videoHeight = 5
         const videoWidth = videoHeight * this.data.recordingData.aspectRatio
@@ -129,11 +119,11 @@ export class App {
      */
     playXRAuthorAnimation(scene: Scene) {
 
-        const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.3 }, scene)
-        sphere.position.y = 1;
-        sphere.position.z = 5;
+        // const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.3 }, scene)
+        // sphere.position.y = 1;
+        // sphere.position.z = 5;
 
-        const id = "m11"
+        const id = "m3"
         const track = this.data.recordingData.animation.tracks[id]
         //convert A-Frame animation (matrices and time) used in XRAuthor to BabylonJS (frame idx)
         const length = track.times.length //how many frames
@@ -141,7 +131,7 @@ export class App {
         //babylon js doesnt manipulate matrices directly, if we want to manipulate the pos/scale/rot, we need to extract them from the matrix and get the vector if we need them
         const keyframes: { frame: number; value: Vector3; }[] = [];
         for (let i = 0; i < length; i++) {
-            //1 matrix 1 frame, stored in a json file in a simple array by Prof
+            //1 matrix 1 frame, stored in a json file in a simple array by Prof in XRAuthor
             const mat = Matrix.FromArray(track.matrices[i].elements)
             const position = mat.getTranslation()
             position.z = -position.z //convert position from Right handed (AFrame) to Left Handed (babylonjs)
@@ -171,11 +161,9 @@ export class App {
             const root = result.getMeshById("__root__")
             root.id = id + ": " + label //make a unique ID instead of everybody sharing root
             root.name = label
-            this.helloPlane.position.setAll(0)
-            this.helloPlane.position.y = -0.5 // a bit below model
-            this.helloPlane.position.z = -0.1 // a bit before
-            this.helloPlane.setParent(root)
-            this.helloText.text = label
+
+            //generate label text a bit below and behind model
+            const labelPlane = new TextPlane(label, "purple", 50, root.id, 2.5, 1, 0, -0.5, -0.1, "", scene, root)
             this.animationGroup.addTargetedAnimation(animation, root)
             //init starting pos
             this.animationGroup.reset() //reset to first frame
@@ -189,9 +177,8 @@ export class App {
         //const camera = new ArcRotateCamera("arcCamera", -Math.PI/5, Math.PI/2, 5, Vector3.Zero(), scene)
         //Arc rotate camera cannot MOVE, if we want FPS style we need UniversalCamera
         //const camera = new UniversalCamera('uniCam', new Vector3(0, 0, -5), scene)
+        //camera.attachControl(this.canvas, true) //attach control to enable user inputs from canvas
         scene.createDefaultCamera(false, true, true)
-        //attach control to enable user inputs from canvas
-        //camera.attachControl(this.canvas, true)
     }
 
     loadModel(scene: Scene) {
@@ -258,6 +245,10 @@ export class App {
         particleSystem.start()
     }
 
+    /**
+     * Unused function to play music
+     * @param scene 
+     */
     addSounds(scene: Scene) {
         const music = new Sound("music", "assets/sounds/music.mp3", scene, null, {
             loop: true, autoplay: false
@@ -270,35 +261,9 @@ export class App {
         hemiLight.intensity = 0.3
         hemiLight.diffuse = new Color3(1, 1, 1)
 
-        const pointLight = new PointLight('pointLight', new Vector3(0, 1.5, 2), scene)
-        pointLight.intensity = 1
-        pointLight.diffuse = new Color3(1, 0, 0)
-    }
-
-    createText(scene: Scene) {
-        //FONT RENDERING
-        this.helloPlane = MeshBuilder.CreatePlane('hello plane', { width: 2.5, height: 1 })
-        this.helloPlane.position.y = 0;
-        this.helloPlane.position.z = 5;
-
-        //create the texture for the helloPlane as text needs texture in babylon
-        const helloTexture = AdvancedDynamicTexture.CreateForMesh(this.helloPlane, 250, 100, false)
-        //helloTexture.background = "white"
-        this.helloText = new TextBlock("hello")
-        this.helloText.text = "Hello XR"
-        this.helloText.color = "purple"
-        this.helloText.fontSize = 60
-        //pass the textBlock to show as texture
-        helloTexture.addControl(this.helloText)
-
-        //Add interaction to make it into a button
-        this.helloText.onPointerUpObservable.add(eventData => {
-            //alert("Hello Text at:\n x: " + eventData.x + " y:" + eventData)
-        })
-        //Works for VR controls too
-        this.helloText.onPointerDownObservable.add(() => {
-            this.sound.play()
-        })
+        // const pointLight = new PointLight('pointLight', new Vector3(0, 1.5, 2), scene)
+        // pointLight.intensity = 1
+        // pointLight.diffuse = new Color3(1, 0, 0)
     }
 
     createSkybox(scene: Scene) {
