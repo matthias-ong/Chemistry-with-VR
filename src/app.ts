@@ -1,4 +1,4 @@
-import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, Vector3, VideoDome, VideoTexture } from "babylonjs"
+import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 import { Mesh } from "babylonjs/Meshes/mesh"
@@ -100,42 +100,43 @@ export class App {
         //const camera = new ArcRotateCamera("arcCamera", -Math.PI/5, Math.PI/2, 5, Vector3.Zero(), scene)
         //Arc rotate camera cannot MOVE, if we want FPS style we need UniversalCamera
         //const camera = new UniversalCamera('uniCam', new Vector3(0, 0, -5), scene)
+        // Targets the camera to a particular position. In this case the scene origin
         //camera.attachControl(this.canvas, true) //attach control to enable user inputs from canvas
         scene.createDefaultCamera(false, true, true)
     }
 
-    loadModel(scene: Scene) {
-        //async so the loading doesnt stall
-        SceneLoader.ImportMeshAsync("", "assets/synthesisDecompBalanced/models/", "H2O.glb", scene).then(result => {
-            const root = result.meshes[0]
-            root.id = "h2oRoot"
-            root.name = "h2oRoot"
-            root.position.y = -1
-            root.rotation = new Vector3(0, 0, Math.PI) //rotation around z
-            root.scaling.setAll(1.5)
-            this.createAnimation(scene, root) //need call animation here during callback in anonymous function
+    // loadModel(scene: Scene) {
+    //     //async so the loading doesnt stall
+    //     SceneLoader.ImportMeshAsync("", "assets/synthesisDecompBalanced/models/", "H2O.glb", scene).then(result => {
+    //         const root = result.meshes[0]
+    //         root.id = "h2oRoot"
+    //         root.name = "h2oRoot"
+    //         root.position.y = -1
+    //         root.rotation = new Vector3(0, 0, Math.PI) //rotation around z
+    //         root.scaling.setAll(1.5)
+    //         this.createAnimation(scene, root) //need call animation here during callback in anonymous function
 
-        })
-        //async functions are basically a promise so if you want to do transformation you need callback functions instead
-        //of calling transforms/anims after the importMesh function
-    }
+    //     })
+    //async functions are basically a promise so if you want to do transformation you need callback functions instead
+    //of calling transforms/anims after the importMesh function
+    //}
 
-    createAnimation(scene: Scene, model: AbstractMesh) {
-        const animation = new Animation(
-            "rotationAnima", "rotation", 30,
-            Animation.ANIMATIONTYPE_VECTOR3,
-            Animation.ANIMATIONLOOPMODE_CYCLE
-        )
-        //define the keyframes for the animation
-        const keyframes = [
-            { frame: 0, value: new Vector3(0, 0, 0) },
-            { frame: 30, value: new Vector3(0, 2 * Math.PI, 0) }
-        ]
-        animation.setKeys(keyframes)
-        model.animations = []
-        model.animations.push(animation) //1 model can have more than 1 animations
-        scene.beginAnimation(model, 0, 30, true)
-    }
+    // createAnimation(scene: Scene, model: AbstractMesh) {
+    //     const animation = new Animation(
+    //         "rotationAnima", "rotation", 30,
+    //         Animation.ANIMATIONTYPE_VECTOR3,
+    //         Animation.ANIMATIONLOOPMODE_CYCLE
+    //     )
+    //     //define the keyframes for the animation
+    //     const keyframes = [
+    //         { frame: 0, value: new Vector3(0, 0, 0) },
+    //         { frame: 30, value: new Vector3(0, 2 * Math.PI, 0) }
+    //     ]
+    //     animation.setKeys(keyframes)
+    //     model.animations = []
+    //     model.animations.push(animation) //1 model can have more than 1 animations
+    //     scene.beginAnimation(model, 0, 30, true)
+    // }
 
     createParticles(scene: Scene) {
         const particleSystem = new ParticleSystem("particles", 5000, scene)
