@@ -36,11 +36,11 @@ export class App {
         this.createCamera(scene)
         this.createLights(scene)
         //this.createParticles(scene)
-
+        this.loadModel(scene)
         this.setUpTutorialVideo(scene)
 
         // CREATE GROUND/TABLE
-        const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
+        //const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
 
         //this.createSkybox(scene)
         //this.createVideoSkyDome(scene)
@@ -105,21 +105,22 @@ export class App {
         scene.createDefaultCamera(false, true, true)
     }
 
-    // loadModel(scene: Scene) {
-    //     //async so the loading doesnt stall
-    //     SceneLoader.ImportMeshAsync("", "assets/synthesisDecompBalanced/models/", "H2O.glb", scene).then(result => {
-    //         const root = result.meshes[0]
-    //         root.id = "h2oRoot"
-    //         root.name = "h2oRoot"
-    //         root.position.y = -1
-    //         root.rotation = new Vector3(0, 0, Math.PI) //rotation around z
-    //         root.scaling.setAll(1.5)
-    //         this.createAnimation(scene, root) //need call animation here during callback in anonymous function
+    loadModel(scene: Scene) {
+        //async so the loading doesnt stall
+        SceneLoader.ImportMeshAsync("", "assets/synthesisDecompBalanced/models/", "classroom.glb", scene).then(result => {
+            const root = result.meshes[0]
+            root.id = "h2oRoot"
+            root.name = "h2oRoot"
+            root.position.y = -3.5
+            root.position.z = -3.5
+            root.rotation = new Vector3(0, Math.PI / 2, 0) //rotation around z
+            root.scaling.setAll(2.5)
+            //this.createAnimation(scene, root) //need call animation here during callback in anonymous function
 
-    //     })
-    //async functions are basically a promise so if you want to do transformation you need callback functions instead
-    //of calling transforms/anims after the importMesh function
-    //}
+        })
+        //async functions are basically a promise so if you want to do transformation you need callback functions instead
+        //of calling transforms/anims after the importMesh function
+    }
 
     // createAnimation(scene: Scene, model: AbstractMesh) {
     //     const animation = new Animation(
