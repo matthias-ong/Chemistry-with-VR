@@ -3,7 +3,9 @@ import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AbstractMesh } from "babylonjs/Meshes/abstractMesh"
 import { Scene } from "babylonjs/scene"
 
-//FONT RENDERING
+/**
+ * This class abstracts text rendering using BabylonJS in the component architecture
+ */
 export class TextPlane {
     public textBlock: TextBlock //public to insert callbacks
     constructor(

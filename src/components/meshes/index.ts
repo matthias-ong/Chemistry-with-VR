@@ -3,3 +3,5 @@
  */
 export * from "./text-plane"
 export * from "./lighting"
+export * from "./video-plane"
+export * from "./video-anim"

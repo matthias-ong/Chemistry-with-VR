@@ -2,7 +2,7 @@ import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, E
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 import { Mesh } from "babylonjs/Meshes/mesh"
-import { Lights, TextPlane } from "./components/meshes"
+import { Lights, TextPlane, XRAuthorTutorialAnimation, XRAuthorVideoPlane } from "./components/meshes"
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
@@ -15,12 +15,8 @@ export class App {
     private canvas: HTMLCanvasElement /** Contains the HTMLCanvasElement that will be rendered into */
     private sound: Sound
     private data: AuthoringData /** Authoring data from  XRAuthor */
-    private videoPlane: Mesh /** Plane to render video on */
 
     public modelIDs: string[] = ["m3", "m4", "m6", "m9", "m11"]
-
-    //TEMP GLOBALS
-    private animationGroup: AnimationGroup
 
     constructor(engine: Engine, canvas: HTMLCanvasElement
         , authoringData: AuthoringData) {
@@ -37,13 +33,11 @@ export class App {
     async createScene(): Promise<Scene> {
         console.log(this.data)
         const scene = new Scene(this.engine)
-        //create camera to see our world
         this.createCamera(scene)
         this.createLights(scene)
         //this.createParticles(scene)
 
-        this.playXRAuthorVideo(scene)
-        this.playXRAuthorAnimation(scene)
+        this.setUpTutorialVideo(scene)
 
         // CREATE GROUND/TABLE
         const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
@@ -51,8 +45,7 @@ export class App {
         //this.createSkybox(scene)
         //this.createVideoSkyDome(scene)
 
-        //enable debug tools
-        this.addInspectorKeyboardShortcut(scene)
+        this.addInspectorKeyboardShortcut(scene) //enable debug tools
 
         //async means you can run subsequent code even before this function returns (cos it may take a while)
         const xr = await scene.createDefaultXRExperienceAsync({
@@ -60,118 +53,44 @@ export class App {
                 sessionMode: "immersive-vr" //Enable XR to see the scene in VR/AR mode
             }
         });
-        /*if you want to call xr's member functions, you need to await to wait for async function to actually return sth before calling it, 
+        /*if you want to call xr's member functions, you need to await for async function to actually return before calling it, 
         using await or declare a callback function to the promise e.g then()
-        
+    
         /*for debugging on browser console - pass xr to window object*/
         (window as any).xr = xr //cast the window obj to be any
         return scene
     }
 
     /**
-     * This function will play the instruction video on the videoPlane
+     * This function will play the instruction video and ANIMATIONS on the videoPlane using the abstracted component classes
+     * XRAuthorVideoPlane and XRAuthorTutorialAnimation, it also implements video controls to pause and play
      * @param scene 
      */
-    playXRAuthorVideo(scene: Scene) {
-        const videoHeight = 5
-        const videoWidth = videoHeight * this.data.recordingData.aspectRatio
-        this.videoPlane = MeshBuilder.CreatePlane("video plane", {
-            height: videoHeight,
-            width: videoWidth
-        }, scene)
-        this.videoPlane.position.z = 6 //put plane behind the text
+    setUpTutorialVideo(scene: Scene) {
+        const tutorialVideoPlane = new XRAuthorVideoPlane("tutorial", 5, new Vector3(0, 0, 6), false, this.data, scene)
+        const tutorialAnimation = new XRAuthorTutorialAnimation("tutorial", this.modelIDs, this.data, tutorialVideoPlane.videoPlane, scene)
 
-        const videoTexture = new VideoTexture("video texture", this.data.video, scene)
-        videoTexture.video.autoplay = false
-        //prevents the video from playing a split second even if autoplay is false, as that may cause browser to mute the video
-        videoTexture.onUserActionRequestedObservable.add(() => { })
+        const tutorialText = new TextPlane("Can't remember? Click on the video to play/pause", "white", 50, "tutorial", 15, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y + 3, tutorialVideoPlane.pos.z, "", scene)
 
-        const videoMaterial = new StandardMaterial("video material", scene)
-        videoMaterial.diffuseTexture = videoTexture
-        videoMaterial.roughness = 1
-        videoMaterial.emissiveColor = Color3.White()
-        this.videoPlane.material = videoMaterial
-
-        // ---------------- VIDEO CONTROLS ----------------
-        //VideoTexture is not part of gui need implement controls manually
-        //we add callbacks to observers of scene
+        // ---------------- VIDEO CONTROLS (PAUSE PLAY) ----------------
+        //VideoTexture is not part of gui need implement controls manually as observers of scene
         scene.onPointerObservable.add(eventData => {
-            //console.log("picked")
-            if (eventData.pickInfo?.pickedMesh === this.videoPlane) {
-                if (videoTexture.video.paused) {
-                    videoTexture.video.play()
-                    this.animationGroup.play(true)
+            if (eventData.pickInfo?.pickedMesh === tutorialVideoPlane.videoPlane) {
+                if (tutorialVideoPlane.videoTexture.video.paused) {
+                    tutorialVideoPlane.videoTexture.video.play()
+                    tutorialAnimation.animationGroup.play(true)
                 }
                 else {
-                    videoTexture.video.pause()
-                    this.animationGroup.pause()
+                    tutorialVideoPlane.videoTexture.video.pause()
+                    tutorialAnimation.animationGroup.pause()
                 }
-                console.log(videoTexture.video.paused ? "paused" : "playing")
+                console.log(tutorialVideoPlane.videoTexture.video.paused ? "paused" : "playing")
             }
             else {
                 console.log(eventData.pickInfo?.pickedMesh)
             }
         }, PointerEventTypes.POINTERPICK //filter ONLY pick events calls this callback (by mouse or any pointer)
         )
-    }
-
-    /**
-     * This function plays animation on the 3D molecules such that they follow the video markers
-     * @param scene 
-     */
-    playXRAuthorAnimation(scene: Scene) {
-
-        // const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.3 }, scene)
-        // sphere.position.y = 1;
-        // sphere.position.z = 5;
-
-        for (const id of this.modelIDs) {
-            const track = this.data.recordingData.animation.tracks[id]
-            //convert A-Frame animation (matrices and time) used in XRAuthor to BabylonJS (frame idx)
-            const length = track.times.length //how many frames
-            const fps = length / this.data.recordingData.animation.duration
-            //babylon js doesnt manipulate matrices directly, if we want to manipulate the pos/scale/rot, we need to extract them from the matrix and get the vector if we need them
-            const keyframes: { frame: number; value: Vector3; }[] = [];
-            for (let i = 0; i < length; i++) {
-                //1 matrix 1 frame, stored in a json file in a simple array by Prof in XRAuthor
-                const mat = Matrix.FromArray(track.matrices[i].elements)
-                const position = mat.getTranslation()
-                position.z = -position.z //convert position from Right handed (AFrame) to Left Handed (babylonjs)
-                //moving the animation from the recorded z to the video plane's z in the current scene
-                const s = this.videoPlane.position.z / position.z //desired depth / depth
-                keyframes.push({
-                    //time * fps = frame idx
-                    frame: track.times[i] * fps, //gets you frame idx
-                    //different sizes of the video planes used in the xrauthor scene and the babylonjs scene's videoPlane, need rescale
-                    value: position.scale(s).multiplyByFloats(3, 3, 1)
-                })
-            }
-            const animation = new Animation("animation", "position", fps, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE)
-            animation.setKeys(keyframes)
-            //sphere.animations = [animation]
-            //scene.beginAnimation(sphere, 0, length - 1, true)
-            //Create animation group instead, for control over multiple models
-            this.animationGroup = new AnimationGroup("animation group", scene)
-            //Animating our video models
-            const info = this.data.recordingData.modelInfo[id]
-            const label = info.label
-            const name = info.name
-            const url = this.data.models[name]
-            //dont need ImportMesh as its already loaded from XRAuthor authoring data, load from url
-            SceneLoader.AppendAsync(url, undefined, scene, undefined, ".glb").then(result => {
-                //glb or gltf models, BabylonJS will add a root object to model
-                const root = result.getMeshById("__root__")
-                root.id = id + ": " + label //make a unique ID instead of everybody sharing root
-                root.name = label
-
-                //generate label text a bit below and behind model
-                const labelPlane = new TextPlane(label, "purple", 50, root.id, 2.5, 1, 0, -0.5, -0.1, "", scene, root)
-                this.animationGroup.addTargetedAnimation(animation, root)
-                //init starting pos
-                this.animationGroup.reset() //reset to first frame
-            })
-        }
-
     }
 
     createCamera(scene: Scene) {
