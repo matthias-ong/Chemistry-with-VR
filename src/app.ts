@@ -2,7 +2,7 @@ import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, E
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 import { Mesh } from "babylonjs/Meshes/mesh"
-import { TextPlane } from "./components/meshes"
+import { Lights, TextPlane } from "./components/meshes"
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
@@ -257,13 +257,9 @@ export class App {
     }
 
     createLights(scene: Scene) {
-        const hemiLight = new HemisphericLight('hemLight', new Vector3(-1, 1, 0), scene)
-        hemiLight.intensity = 0.3
-        hemiLight.diffuse = new Color3(1, 1, 1)
+        const lights = new Lights(scene);
+        lights.addHemisphericLight("first", new Vector3(-1, 1, 0), 0.3, new Color3(1, 1, 1))
 
-        // const pointLight = new PointLight('pointLight', new Vector3(0, 1.5, 2), scene)
-        // pointLight.intensity = 1
-        // pointLight.diffuse = new Color3(1, 0, 0)
     }
 
     createSkybox(scene: Scene) {
@@ -283,18 +279,18 @@ export class App {
         skybox.material = skyboxMaterial
     }
 
-    createVideoSkyDome(scene: Scene) {
-        //create a Dome to encapsulate the video
-        const dome = new VideoDome(
-            "videoDome",
-            "assets/videos/bridge-360.mp4",
-            {
-                resolution: 32,
-                size: 1000
-            },
-            scene
-        )
-    }
+    // createVideoSkyDome(scene: Scene) {
+    //     //create a Dome to encapsulate the video
+    //     const dome = new VideoDome(
+    //         "videoDome",
+    //         "assets/videos/bridge-360.mp4",
+    //         {
+    //             resolution: 32,
+    //             size: 1000
+    //         },
+    //         scene
+    //     )
+    // }
 
     //babylonJS has an inspector and we set a keyboard listener
     //to open the inspector when we do CTRL-ALT-I
