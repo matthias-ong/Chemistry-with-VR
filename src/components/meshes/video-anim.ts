@@ -1,4 +1,4 @@
-import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior, ActionManager, InterpolateValueAction, Color3, PredicateCondition, SetValueAction, AbstractMesh, ExecuteCodeAction } from "babylonjs";
+import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior, ActionManager, InterpolateValueAction, Color3, PredicateCondition, SetValueAction, AbstractMesh, ExecuteCodeAction, Behavior } from "babylonjs";
 import { Mesh } from "babylonjs/Meshes/mesh";
 import { Scene } from "babylonjs/scene";
 import { AuthoringData } from "xrauthor-loader";
@@ -13,6 +13,7 @@ export class XRAuthorTutorialAnimation {
     public animationGroup: AnimationGroup //set public for callbacks to stop anim
     private scene: Scene
     private promises: Promise<void>[] = []
+    private pointerDragBehaviour: PointerDragBehavior
 
     public async loadTutorialAnimAsync(
         name: string,
@@ -73,15 +74,15 @@ export class XRAuthorTutorialAnimation {
 
                     //interactions
                     // Method 1: use behaviours
-                    const pointerDragBehaviour = new PointerDragBehavior({
+                    this.pointerDragBehaviour = new PointerDragBehavior({
                         dragPlaneNormal: new Vector3(0, 0, 1), // pointing in positive z direction,
                     })
                     //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
-                    pointerDragBehaviour.onDragStartObservable.add(evtData => {
+                    this.pointerDragBehaviour.onDragStartObservable.add(evtData => {
                         console.log("Drag start: object id = " + id)
                         console.log(evtData)
                     })
-                    root.addBehavior(pointerDragBehaviour)
+                    root.addBehavior(this.pointerDragBehaviour)
 
                     //Method 2: use actions for modifying game objects
                     const actionManager = root.actionManager = new ActionManager(this.scene)
@@ -152,7 +153,9 @@ export class XRAuthorTutorialAnimation {
 
                     // If the distance is less than a threshold value, move the first mesh to (1,1,1)
                     if (distance < 2) { // Change the threshold value to suit your needs
-                        firstMesh.position = new Vector3(1, 1, 1);
+                        //firstMesh.position = secondMesh.position;
+                        secondMesh.removeBehavior(this.pointerDragBehaviour)
+                        secondMesh.setParent(firstMesh)
                     }
                 }
             )
@@ -182,6 +185,7 @@ export class XRAuthorTutorialAnimation {
                 () => {
                     // Move the first mesh to (1,1,1)
                     firstMesh.position = new Vector3(1, 1, 1);
+                    secondMesh.setParent(firstMesh)
                 }
             )
         );
