@@ -1,4 +1,4 @@
-import { AbstractMesh, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
+import { AbstractMesh, ActionManager, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, InterpolateValueAction, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 import { Mesh } from "babylonjs/Meshes/mesh"
@@ -122,23 +122,6 @@ export class App {
         //of calling transforms/anims after the importMesh function
     }
 
-    // createAnimation(scene: Scene, model: AbstractMesh) {
-    //     const animation = new Animation(
-    //         "rotationAnima", "rotation", 30,
-    //         Animation.ANIMATIONTYPE_VECTOR3,
-    //         Animation.ANIMATIONLOOPMODE_CYCLE
-    //     )
-    //     //define the keyframes for the animation
-    //     const keyframes = [
-    //         { frame: 0, value: new Vector3(0, 0, 0) },
-    //         { frame: 30, value: new Vector3(0, 2 * Math.PI, 0) }
-    //     ]
-    //     animation.setKeys(keyframes)
-    //     model.animations = []
-    //     model.animations.push(animation) //1 model can have more than 1 animations
-    //     scene.beginAnimation(model, 0, 30, true)
-    // }
-
     createParticles(scene: Scene) {
         const particleSystem = new ParticleSystem("particles", 5000, scene)
         particleSystem.particleTexture = new Texture("assets/textures/flare.png", scene)
@@ -184,7 +167,7 @@ export class App {
     createLights(scene: Scene) {
         const lights = new Lights(scene);
         lights.addHemisphericLight("first", new Vector3(-1, 1, 0), 0.3, new Color3(1, 1, 1))
-
+        // lights.addPointLight("2", new Vector3(1, 1, 1), new Vector3(0, 4, 5), 10, new Color3(0, 1, 0))
     }
 
     createSkybox(scene: Scene) {

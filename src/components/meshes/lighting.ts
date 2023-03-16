@@ -19,11 +19,13 @@ export class Lights {
 
     addPointLight(
         name: string,
+        position: Vector3,
         direction: Vector3,
         intensity: number,
         diffuseColor: Color3
     ) {
         const pointLight = new PointLight(name + ' pointLight', direction, this.scene)
+        pointLight.position = position
         pointLight.intensity = intensity
         pointLight.diffuse = diffuseColor
         this.lights.push(new LightSource(name, pointLight))

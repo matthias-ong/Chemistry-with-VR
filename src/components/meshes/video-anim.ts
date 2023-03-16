@@ -1,4 +1,4 @@
-import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior, ActionManager } from "babylonjs";
+import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior, ActionManager, InterpolateValueAction, Color3, PredicateCondition } from "babylonjs";
 import { Mesh } from "babylonjs/Meshes/mesh";
 import { Scene } from "babylonjs/scene";
 import { AuthoringData } from "xrauthor-loader";
@@ -11,13 +11,14 @@ import { TextPlane } from "../meshes"
  */
 export class XRAuthorTutorialAnimation {
     public animationGroup: AnimationGroup //set public for callbacks to stop anim
+    private scene: Scene
     constructor(
         name: string,
         ids: string[],
         data: AuthoringData,
         videoPlane: Mesh,
         scene: Scene,) {
-
+        this.scene = scene
         this.animationGroup = new AnimationGroup(name + " animation group", scene)
         for (const id of ids) {
             const track = data.recordingData.animation.tracks[id]
@@ -66,19 +67,54 @@ export class XRAuthorTutorialAnimation {
 
                     //interactions
                     // Method 1: use behaviours
-                    const pointerDragBehaviour = new PointerDragBehavior({
-                        dragPlaneNormal: new Vector3(0, 0, 1), // pointing in positive z direction,
-                    })
-                    //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
-                    pointerDragBehaviour.onDragStartObservable.add(evtData => {
-                        console.log("Drag start: object id = " + id)
-                        console.log(evtData)
-                    })
-                    root.addBehavior(pointerDragBehaviour)
+                    // const pointerDragBehaviour = new PointerDragBehavior({
+                    //     dragPlaneNormal: new Vector3(0, 0, 1), // pointing in positive z direction,
+                    // })
+                    // //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
+                    // pointerDragBehaviour.onDragStartObservable.add(evtData => {
+                    //     console.log("Drag start: object id = " + id)
+                    //     console.log(evtData)
+                    // })
+                    // root.addBehavior(pointerDragBehaviour)
 
-                    //Method 2: use actions
-                    // const actionManager = new ActionManager(scene)
-                    // actionManager.isRecursive = true
+                    //Method 2: use actions for modifying game objects
+                    const actionManager = root.actionManager = new ActionManager(this.scene)
+                    actionManager.isRecursive = true //actions to recurse down children mesh if any
+
+                    const light = this.scene.getLightById("first hemLight")
+                    actionManager.registerAction(
+                        new InterpolateValueAction(
+                            ActionManager.OnPickDownTrigger,
+                            light,
+                            "diffuse",
+                            Color3.Black(),
+                            1000
+                        )
+                    ).then( //chain 2nd action to be performed after 1st action occurs
+                        new InterpolateValueAction(
+                            ActionManager.OnPickDownTrigger,
+                            light,
+                            "diffuse",
+                            Color3.White(),
+                            1000
+                        )
+                    )
+                    //can also give custom conditions to actions
+                    actionManager.registerAction(
+                        new InterpolateValueAction(
+                            ActionManager.OnPickDownTrigger,
+                            root,
+                            "scaling",
+                            new Vector3(2, 2, 2),
+                            1000,
+                            new PredicateCondition(
+                                actionManager,
+                                () => { //perform this action when Black
+                                    return light.diffuse.equals(Color3.Black())
+                                }
+                            )
+                        )
+                    )
 
                 }
                 else {
