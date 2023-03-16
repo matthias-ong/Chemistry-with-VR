@@ -1,4 +1,4 @@
-import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior, ActionManager, InterpolateValueAction, Color3, PredicateCondition } from "babylonjs";
+import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior, ActionManager, InterpolateValueAction, Color3, PredicateCondition, SetValueAction, AbstractMesh, ExecuteCodeAction } from "babylonjs";
 import { Mesh } from "babylonjs/Meshes/mesh";
 import { Scene } from "babylonjs/scene";
 import { AuthoringData } from "xrauthor-loader";
@@ -12,14 +12,18 @@ import { TextPlane } from "../meshes"
 export class XRAuthorTutorialAnimation {
     public animationGroup: AnimationGroup //set public for callbacks to stop anim
     private scene: Scene
-    constructor(
+    private promises: Promise<void>[] = []
+
+    public async loadTutorialAnimAsync(
         name: string,
         ids: string[],
         data: AuthoringData,
         videoPlane: Mesh,
-        scene: Scene,) {
+        scene: Scene,): Promise<void> {
+
         this.scene = scene
         this.animationGroup = new AnimationGroup(name + " animation group", scene)
+        this.scene.actionManager = new ActionManager(this.scene)
         for (const id of ids) {
             const track = data.recordingData.animation.tracks[id]
             //convert A-Frame animation (matrices and time) used in XRAuthor to BabylonJS (frame idx)
@@ -53,75 +57,135 @@ export class XRAuthorTutorialAnimation {
             const name = info.name
             const url = data.models[name]
             //dont need ImportMesh as its already loaded from XRAuthor authoring data, load from url
-            SceneLoader.AppendAsync(url, undefined, scene, undefined, ".glb").then(result => {
+            this.promises.push(SceneLoader.AppendAsync(url, undefined, this.scene, undefined, ".glb").then(result => {
                 //glb or gltf models, BabylonJS will add a root object to model
+
                 const root = result.getMeshById("__root__")
                 if (root) {
+                    root.checkCollisions = true;
                     root.id = id + ": " + label //make a unique ID instead of everybody sharing root
                     root.name = label
                     //generate label text a bit below and behind model
-                    const labelPlane = new TextPlane(label, "purple", 50, root.id, 2.5, 1, 0, -0.5, -0.1, "", scene, root)
+                    const labelPlane = new TextPlane(label, "purple", 50, root.id, 2.5, 1, 0, -0.5, -0.1, "", this.scene, root)
                     this.animationGroup.addTargetedAnimation(animation, root)
                     //init starting pos
                     this.animationGroup.reset() //reset to first frame
 
                     //interactions
                     // Method 1: use behaviours
-                    // const pointerDragBehaviour = new PointerDragBehavior({
-                    //     dragPlaneNormal: new Vector3(0, 0, 1), // pointing in positive z direction,
-                    // })
-                    // //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
-                    // pointerDragBehaviour.onDragStartObservable.add(evtData => {
-                    //     console.log("Drag start: object id = " + id)
-                    //     console.log(evtData)
-                    // })
-                    // root.addBehavior(pointerDragBehaviour)
+                    const pointerDragBehaviour = new PointerDragBehavior({
+                        dragPlaneNormal: new Vector3(0, 0, 1), // pointing in positive z direction,
+                    })
+                    //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
+                    pointerDragBehaviour.onDragStartObservable.add(evtData => {
+                        console.log("Drag start: object id = " + id)
+                        console.log(evtData)
+                    })
+                    root.addBehavior(pointerDragBehaviour)
 
                     //Method 2: use actions for modifying game objects
                     const actionManager = root.actionManager = new ActionManager(this.scene)
                     actionManager.isRecursive = true //actions to recurse down children mesh if any
 
-                    const light = this.scene.getLightById("first hemLight")
-                    actionManager.registerAction(
-                        new InterpolateValueAction(
-                            ActionManager.OnPickDownTrigger,
-                            light,
-                            "diffuse",
-                            Color3.Black(),
-                            1000
-                        )
-                    ).then( //chain 2nd action to be performed after 1st action occurs
-                        new InterpolateValueAction(
-                            ActionManager.OnPickDownTrigger,
-                            light,
-                            "diffuse",
-                            Color3.White(),
-                            1000
-                        )
-                    )
-                    //can also give custom conditions to actions
-                    actionManager.registerAction(
-                        new InterpolateValueAction(
-                            ActionManager.OnPickDownTrigger,
-                            root,
-                            "scaling",
-                            new Vector3(2, 2, 2),
-                            1000,
-                            new PredicateCondition(
-                                actionManager,
-                                () => { //perform this action when Black
-                                    return light.diffuse.equals(Color3.Black())
-                                }
-                            )
-                        )
-                    )
-
+                    // const light = this.scene.getLightById("first hemLight")
+                    // actionManager.registerAction(
+                    //     new InterpolateValueAction(
+                    //         ActionManager.OnPickDownTrigger,
+                    //         light,
+                    //         "diffuse",
+                    //         Color3.Black(),
+                    //         1000
+                    //     )
+                    // ).then( //chain 2nd action to be performed after 1st action occurs
+                    //     new InterpolateValueAction(
+                    //         ActionManager.OnPickDownTrigger,
+                    //         light,
+                    //         "diffuse",
+                    //         Color3.White(),
+                    //         1000
+                    //     )
+                    // )
+                    // //can also give custom conditions to actions
+                    // actionManager.registerAction(
+                    //     new InterpolateValueAction(
+                    //         ActionManager.OnPickDownTrigger,
+                    //         root,
+                    //         "scaling",
+                    //         new Vector3(2, 2, 2),
+                    //         1000,
+                    //         new PredicateCondition(
+                    //             actionManager,
+                    //             () => { //perform this action when Black
+                    //                 return light.diffuse.equals(Color3.Black())
+                    //             }
+                    //         )
+                    //     )
+                    // )
                 }
                 else {
                     console.log("TutorialAnimation: Root is NULL!")
                 }
-            })
+            }))
         }
 
+        await Promise.all(this.promises);
+        this.initMoveAction("m3: H2O", "m4: H2")
     }
+
+    private initMoveAction(firstID: string, secondID: string) {
+        // Get the meshes
+        const firstMesh = this.scene.getMeshById(firstID);
+        const secondMesh = this.scene.getMeshById(secondID);
+
+        // Register an action for the first mesh
+        this.scene.actionManager.registerAction(
+            new ExecuteCodeAction(
+                {
+                    // Trigger the action when the first mesh is approaching the second mesh
+                    trigger: ActionManager.OnEveryFrameTrigger,
+                    parameter: null
+                },
+                () => {
+                    // Get the distance between the two meshes
+                    const distance = firstMesh.position.subtract(secondMesh.position).length();
+                    //console.log(distance)
+
+                    // If the distance is less than a threshold value, move the first mesh to (1,1,1)
+                    if (distance < 2) { // Change the threshold value to suit your needs
+                        firstMesh.position = new Vector3(1, 1, 1);
+                    }
+                }
+            )
+        );
+    }
+
+    private initCollisionAction(firstID: string, secondID: string) {
+        // Get the meshes
+        const firstMesh = this.scene.getMeshById(firstID);
+        const secondMesh = this.scene.getMeshById(secondID);
+
+        // Enable checkCollisions for both meshes
+        firstMesh.checkCollisions = true;
+        secondMesh.checkCollisions = true;
+
+        // Register an action for the first mesh
+        firstMesh.actionManager.registerAction(
+            new ExecuteCodeAction(
+                {
+                    // Trigger the action when the first mesh collides with the second mesh
+                    trigger: ActionManager.OnIntersectionEnterTrigger,
+                    parameter: {
+                        mesh: secondMesh,
+                        usePreciseIntersection: true
+                    }
+                },
+                () => {
+                    // Move the first mesh to (1,1,1)
+                    firstMesh.position = new Vector3(1, 1, 1);
+                }
+            )
+        );
+    }
+
+
 }

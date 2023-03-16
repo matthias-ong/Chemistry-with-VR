@@ -68,7 +68,10 @@ export class App {
      */
     setUpTutorialVideo(scene: Scene) {
         const tutorialVideoPlane = new XRAuthorVideoPlane("tutorial", 5, new Vector3(0, 0, 6), false, this.data, scene)
-        const tutorialAnimation = new XRAuthorTutorialAnimation("tutorial", this.modelIDs, this.data, tutorialVideoPlane.videoPlane, scene)
+        const tutorialAnimation = new XRAuthorTutorialAnimation()
+        tutorialAnimation.loadTutorialAnimAsync("tutorial", this.modelIDs, this.data, tutorialVideoPlane.videoPlane, scene)
+
+        //tutorialAnimation.initCollisionAction("m3: H2O", "m4: H2")
 
         const tutorialText = new TextPlane("Can't remember? Click on the video to play/pause", "white", 50, "tutorial", 15, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y + 3, tutorialVideoPlane.pos.z, "", scene)
 
