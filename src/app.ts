@@ -1,8 +1,7 @@
-import { AbstractMesh, ActionManager, Animation, AnimationGroup, Color3, Color4, CubeTexture, Engine, HemisphericLight, InterpolateValueAction, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
+import { Color3, Color4, CubeTexture, Engine, HemisphericLight, InterpolateValueAction, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
-import { Mesh } from "babylonjs/Meshes/mesh"
-import { Lights, TextPlane, XRAuthorTutorialAnimation, XRAuthorVideoPlane } from "./components/meshes"
+import { Lights, TextPlane, XRAuthorTutorialAnimation, XRAuthorVideoPlane } from "./components"
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
@@ -170,7 +169,7 @@ export class App {
     createLights(scene: Scene) {
         const lights = new Lights(scene);
         lights.addHemisphericLight("first", new Vector3(-1, 1, 0), 0.3, new Color3(1, 1, 1))
-        // lights.addPointLight("2", new Vector3(1, 1, 1), new Vector3(0, 4, 5), 10, new Color3(0, 1, 0))
+        //lights.addPointLight("2", new Vector3(1, 1, 1), new Vector3(0, 4, 5), 10, new Color3(0, 1, 0))
     }
 
     createSkybox(scene: Scene) {
