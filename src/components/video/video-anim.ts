@@ -31,19 +31,28 @@ export class XRAuthorTutorialAnimation {
             const length = track.times.length //how many frames
             const fps = length / data.recordingData.animation.duration
             //babylon js doesnt manipulate matrices directly, if we want to manipulate the pos/scale/rot, we need to extract them from the matrix and get the vector if we need them
+
+
             const keyframes: { frame: number; value: Vector3; }[] = [];
             for (let i = 0; i < length; i++) {
                 //1 matrix 1 frame, stored in a json file in a simple array by Prof in XRAuthor
                 const mat = Matrix.FromArray(track.matrices[i].elements)
                 const position = mat.getTranslation()
                 position.z = -position.z //convert position from Right handed (AFrame) to Left Handed (babylonjs)
-                //moving the animation from the recorded z to the video plane's z in the current scene
-                const s = videoPlane.position.z / position.z //desired depth / depth
+                //moving the animation from the recorded z to the video plane's z in the current scene (depth scaling)
+                //https://www.youtube.com/watch?v=qMWhjJBTVzY
+                //desired depth in BabylonJS scene / original depth in XRAuthor
+                //can use data.recordingData.videoPlaneDepth   
+                const scaleForDepth = (videoPlane.position.z - 0.3) / position.z
+                const fov = data.recordingData.fovInDegrees
+                const videoHeightFromRecordingAfterDepthScaling = Math.tan(fov / 2) * videoPlane.position.z * 2
+                //const scaleForSize = videoHeight  / videoHeightFromRecordingAfterDepthScaling
+                const scaleForSize = 3
                 keyframes.push({
                     //time * fps = frame idx
                     frame: track.times[i] * fps, //gets you frame idx
                     //different sizes of the video planes used in the xrauthor scene and the babylonjs scene's videoPlane, need rescale
-                    value: position.scale(s).multiplyByFloats(3, 3, 1)
+                    value: position.scale(scaleForDepth).multiplyByFloats(scaleForSize, scaleForSize, 1)
                 })
             }
             const animation = new Animation("animation", "position", fps, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE)
