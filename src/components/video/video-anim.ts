@@ -11,8 +11,10 @@ import { MeshExt } from ".."
  */
 export class XRAuthorTutorialAnimation {
     public animationGroup: AnimationGroup //set public for callbacks to stop anim
+    private animation: Animation
     private scene: Scene
     private promises: Promise<MeshExt>[] = []
+
     //private pointerDragBehaviour: PointerDragBehavior
 
     public async loadTutorialAnimAsync(
@@ -24,7 +26,7 @@ export class XRAuthorTutorialAnimation {
 
         this.scene = scene
         this.animationGroup = new AnimationGroup(name + " animation group", scene)
-        this.scene.actionManager = new ActionManager(this.scene)
+
         for (const id of ids) {
             const track = data.recordingData.animation.tracks[id]
             //convert A-Frame animation (matrices and time) used in XRAuthor to BabylonJS (frame idx)
@@ -55,22 +57,17 @@ export class XRAuthorTutorialAnimation {
                     value: position.scale(scaleForDepth).multiplyByFloats(scaleForSize, scaleForSize, 1)
                 })
             }
-            const animation = new Animation("animation", "position", fps, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE)
-            animation.setKeys(keyframes)
+            this.animation = new Animation("animation", "position", fps, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE)
+            this.animation.setKeys(keyframes)
             //sphere.animations = [animation]
             //scene.beginAnimation(sphere, 0, length - 1, true)
             //Create animation group instead, for control over multiple models
 
             //Animating our video models
-            const info = data.recordingData.modelInfo[id]
-            const label = info.label
-            const name = info.name
-            const url = data.models[name]
-            this.promises.push(MeshExt.CreateExtModel(new MeshExt(id, this.scene), url, label, this.animationGroup, animation))
+            this.promises.push(MeshExt.CreateExtModelAnim(new MeshExt(id, this.scene), id, data, this.animationGroup, this.animation))
         }
 
-        await Promise.all(this.promises);
-
+        await Promise.all(this.promises)
         //this.initMoveAction("m3: H2O", "m4: H2") //using scene actionManager
     }
 

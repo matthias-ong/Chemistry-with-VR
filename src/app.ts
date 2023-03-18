@@ -1,12 +1,19 @@
-import { Color3, Color4, CubeTexture, Engine, HemisphericLight, InterpolateValueAction, Matrix, MeshBuilder, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, UniversalCamera, Vector3, VideoDome, VideoTexture } from "babylonjs"
+import { AbstractMesh, ActionManager, Camera, Color3, Color4, CubeTexture, Engine, HemisphericLight, InterpolateValueAction, Matrix, Mesh, MeshBuilder, Observable, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, TransformNode, UniversalCamera, Vector3, VideoDome, VideoTexture, WebXRDefaultExperience, WebXRFeatureName, WebXRFeaturesManager, WebXRMotionControllerTeleportation } from "babylonjs"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
-import { Lights, TextPlane, XRAuthorTutorialAnimation, XRAuthorVideoPlane } from "./components"
+import { Lights, MeshExt, TextPlane, XRAuthorTutorialAnimation, XRAuthorVideoPlane } from "./components"
+
+enum MovementMode {
+    Teleportation,
+    Controller,
+    Walk
+}
+
 /**
  * Comments follow Google's JSDOC guide at:
  * http://google.github.io/styleguide/tsguide.html#comments-documentation
  * 
- * This is the App class that will be exported as a module. It contains all the implementation
+ * This is the App class that will be exported as an extension or standalone. It contains all the implementation
  * of the scene that will be used with the XRAuthor interface.
  */
 export class App {
@@ -14,6 +21,10 @@ export class App {
     private canvas: HTMLCanvasElement /** Contains the HTMLCanvasElement that will be rendered into */
     private sound: Sound
     private data: AuthoringData /** Authoring data from  XRAuthor */
+    private molecules: AbstractMesh[] = []
+    private ground: AbstractMesh[] = []
+    //private xr: WebXRDefaultExperience
+
 
     public modelIDs: string[] = ["m3", "m4", "m6", "m9", "m11"]
 
@@ -31,19 +42,29 @@ export class App {
      */
     async createScene(): Promise<Scene> {
         console.log(this.data)
+
+        // setup babylonjs scene
         const scene = new Scene(this.engine)
+        scene.actionManager = new ActionManager(scene) //init actionManager for action interactions
+
+        // set up camera
         this.createCamera(scene)
+
+        // set up lights
         this.createLights(scene)
         //this.createParticles(scene)
+
+        // set up skybox
         this.createSkybox(scene)
-        this.loadClassroom(scene)
+
+        // set up classroom
+        await this.loadClassroom(scene)
+
+        // set up tutorial video
         this.setUpTutorialVideo(scene)
 
-        // CREATE GROUND/TABLE
-        //const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
-
-
-        //this.createVideoSkyDome(scene)
+        // set up interactable section
+        this.setUpInteractableSection(scene)
 
         this.addInspectorKeyboardShortcut(scene) //enable debug tools
 
@@ -58,6 +79,19 @@ export class App {
     
         /*for debugging on browser console - pass xr to window object*/
         (window as any).xr = xr //cast the window obj to be any
+
+        const ground = MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene)
+        ground.position.y = -2.6
+        ground.position.z = -5.5
+        const groundMaterial = new StandardMaterial("groundMaterial", scene);
+        ground.material = groundMaterial;
+
+        const featureManager = (await xr).baseExperience.featuresManager
+        console.log(WebXRFeaturesManager.GetAvailableFeatures())
+        // locomotion
+        const movement = MovementMode.Teleportation;
+        this.initLocomotion(movement, await xr, featureManager, [ground], scene)
+
         return scene
     }
 
@@ -67,13 +101,13 @@ export class App {
      * @param scene 
      */
     setUpTutorialVideo(scene: Scene) {
-        const tutorialVideoPlane = new XRAuthorVideoPlane("tutorial", 5, new Vector3(0, 0, 6), false, this.data, scene)
+        const tutorialVideoPlane = new XRAuthorVideoPlane("tutorial", 5, new Vector3(0, 3, 6), false, this.data, scene)
         const tutorialAnimation = new XRAuthorTutorialAnimation()
         tutorialAnimation.loadTutorialAnimAsync("tutorial", this.modelIDs, this.data, tutorialVideoPlane.videoPlane, scene)
 
         //tutorialAnimation.initCollisionAction("m3: H2O", "m4: H2")
 
-        const tutorialText = new TextPlane("Can't remember? Click on the video to play/pause", "white", 50, "tutorial", 15, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y + 3, tutorialVideoPlane.pos.z, "", scene)
+        const tutorialText = new TextPlane("Can't remember? Click on the video to play/pause", "white", 50, "tutorial", 15, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y, tutorialVideoPlane.pos.z, "", scene)
 
         // ---------------- VIDEO CONTROLS (PAUSE PLAY) ----------------
         //VideoTexture is not part of gui need implement controls manually as observers of scene
@@ -97,20 +131,16 @@ export class App {
     }
 
     createCamera(scene: Scene) {
-        //Think of this camera as one orbiting its target position. relative position to the target 
-        //can be set by three parameters, alpha (radians) the longitudinal rotation, beta (radians) the latitudinal 
-        //rotation and the distance from the target position.
-        //const camera = new ArcRotateCamera("arcCamera", -Math.PI/5, Math.PI/2, 5, Vector3.Zero(), scene)
-        //Arc rotate camera cannot MOVE, if we want FPS style we need UniversalCamera
-        //const camera = new UniversalCamera('uniCam', new Vector3(0, 0, -5), scene)
-        // Targets the camera to a particular position. In this case the scene origin
-        //camera.attachControl(this.canvas, true) //attach control to enable user inputs from canvas
+        // just default camera for now
         scene.createDefaultCamera(false, true, true)
+        const defaultCamera = scene.activeCamera;
+        defaultCamera.position = new Vector3(0, 1, -15)
+
     }
 
-    loadClassroom(scene: Scene) {
+    async loadClassroom(scene: Scene) {
         //async so the loading doesnt stall
-        SceneLoader.ImportMeshAsync("", "assets/extra_models/", "classroom.glb", scene).then(result => {
+        return SceneLoader.ImportMeshAsync("", "assets/extra_models/", "classroom.glb", scene).then(result => {
             const root = result.meshes[0]
             root.id = "classroom"
             root.name = "classroom"
@@ -118,11 +148,72 @@ export class App {
             root.position.z = -3.5
             root.rotation = new Vector3(0, Math.PI / 2, 0) //rotation around z
             root.scaling.setAll(2.5)
-            //this.createAnimation(scene, root) //need call animation here during callback in anonymous function
-
+            this.ground.push(root)
         })
         //async functions are basically a promise so if you want to do transformation you need callback functions instead
         //of calling transforms/anims after the importMesh function
+    }
+
+    async setUpInteractableSection(scene: Scene) {
+        const promises: Promise<MeshExt>[] = []
+        for (const id of this.modelIDs) {
+            promises.push(MeshExt.CreateExtModel(new MeshExt(id, scene), id, this.data))
+        }
+
+        await Promise.all(promises).then(meshes => {
+            this.molecules = promises.map((promise, index) => meshes[index].mesh)
+        })
+        this.molecules[0].position.set(0, 1, 5)
+
+        //use observables
+        // 1. create an observable for detecing intersections
+        const onIntersectionObservable = new Observable<Boolean>()
+        scene.registerBeforeRender(function () {
+            if (scene.activeCamera.position.y < 0.4 || scene.activeCamera.position.y > 0.6) //threshold for height
+                scene.activeCamera.position.y = 0.5
+            //const isIntersecting = 
+        })
+    }
+
+    initLocomotion(movement: MovementMode, xr: WebXRDefaultExperience, featureManager: WebXRFeaturesManager, ground: AbstractMesh[], scene: Scene) {
+        switch (movement) {
+            case MovementMode.Teleportation:
+                console.log("movement mode: " + movement.toString())
+                const teleport = featureManager.enableFeature(
+                    WebXRFeatureName.TELEPORTATION, "stable",
+                    {
+                        xrInput: xr.input,
+                        floorMeshes: ground,
+                        timeToTeleport: 1000, //wait 1 second
+                        useMainComponentOnly: true,
+                        defaultTargetMesgOptions: { //specify indicator
+                            teleportationFillColor: "#55FF99",
+                            teleportationBorderColor: "blue",
+                            torusArrowMaterial: ground[0].material, //we reuse material of ground
+
+                        },
+                    },
+                    true,
+                    true
+                ) as WebXRMotionControllerTeleportation
+                teleport.parabolicRayEnabled = true
+                teleport.parabolicCheckRadius = 2
+
+                break
+            case MovementMode.Walk:
+                console.log("movement mode: " + movement.toString())
+                featureManager.disableFeature(WebXRFeatureName.TELEPORTATION)
+                const xrRoot = new TransformNode("xr root", scene)
+                xr.baseExperience.camera.parent = xrRoot
+                featureManager.enableFeature(
+                    WebXRFeatureName.WALKING_LOCOMOTION,
+                    "latest",
+                    {
+                        locomotionTarget: xrRoot,
+                    }
+                )
+                break
+        }
     }
 
     createParticles(scene: Scene) {
@@ -190,18 +281,6 @@ export class App {
         skybox.material = skyboxMaterial
     }
 
-    // createVideoSkyDome(scene: Scene) {
-    //     //create a Dome to encapsulate the video
-    //     const dome = new VideoDome(
-    //         "videoDome",
-    //         "assets/videos/bridge-360.mp4",
-    //         {
-    //             resolution: 32,
-    //             size: 1000
-    //         },
-    //         scene
-    //     )
-    // }
 
     //babylonJS has an inspector and we set a keyboard listener
     //to open the inspector when we do CTRL-ALT-I
