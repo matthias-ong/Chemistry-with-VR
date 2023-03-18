@@ -3,10 +3,10 @@ const HtmlWebpackPlugin = require("html-webpack-plugin")
 const CopyPlugin = require("copy-webpack-plugin")
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: path.resolve(__dirname, './src/index.ts'),
     output: {
         filename: 'index.js',
-        path: path.resolve(__dirname, 'dist')
+        path: path.resolve(__dirname, 'dist/app')
     },
     resolve: {
         extensions: [".ts", ".js"]

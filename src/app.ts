@@ -35,13 +35,14 @@ export class App {
         this.createCamera(scene)
         this.createLights(scene)
         //this.createParticles(scene)
-        this.loadModel(scene)
+        this.createSkybox(scene)
+        this.loadClassroom(scene)
         this.setUpTutorialVideo(scene)
 
         // CREATE GROUND/TABLE
         //const ground = MeshBuilder.CreateGround('ground', { width: 8, height: 8 }, scene);
 
-        //this.createSkybox(scene)
+
         //this.createVideoSkyDome(scene)
 
         this.addInspectorKeyboardShortcut(scene) //enable debug tools
@@ -107,12 +108,12 @@ export class App {
         scene.createDefaultCamera(false, true, true)
     }
 
-    loadModel(scene: Scene) {
+    loadClassroom(scene: Scene) {
         //async so the loading doesnt stall
-        SceneLoader.ImportMeshAsync("", "assets/synthesisDecompBalanced/models/", "classroom.glb", scene).then(result => {
+        SceneLoader.ImportMeshAsync("", "assets/extra_models/", "classroom.glb", scene).then(result => {
             const root = result.meshes[0]
-            root.id = "h2oRoot"
-            root.name = "h2oRoot"
+            root.id = "classroom"
+            root.name = "classroom"
             root.position.y = -3.5
             root.position.z = -3.5
             root.rotation = new Vector3(0, Math.PI / 2, 0) //rotation around z
