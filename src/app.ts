@@ -198,18 +198,25 @@ export class App {
                 ) as WebXRMotionControllerTeleportation
                 teleport.parabolicRayEnabled = true
                 teleport.parabolicCheckRadius = 2
-
                 break
-            case MovementMode.Walk:
+            case MovementMode.Controller:
                 console.log("movement mode: " + movement.toString())
                 featureManager.disableFeature(WebXRFeatureName.TELEPORTATION)
-                const xrRoot = new TransformNode("xr root", scene)
+                featureManager.enableFeature(WebXRFeatureName.MOVEMENT, "latest",
+                    {
+                        xrInput: xr.input,
+                    })
+                break
+            case MovementMode.Walk: //WIP (experimental)
+                console.log("movement mode: " + movement.toString())
+                featureManager.disableFeature(WebXRFeatureName.TELEPORTATION)
+                const xrRoot = new TransformNode("xr root", scene) //TransformNode is parent class of Abstract Mesh, node containing transforming info
                 xr.baseExperience.camera.parent = xrRoot
                 featureManager.enableFeature(
                     WebXRFeatureName.WALKING_LOCOMOTION,
-                    "latest",
+                    "latest", //or stable
                     {
-                        locomotionTarget: xrRoot,
+                        locomotionTarget: xrRoot, //target for walking locomotion
                     }
                 )
                 break
