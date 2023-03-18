@@ -92,6 +92,21 @@ export class App {
         const movement = MovementMode.Teleportation;
         this.initLocomotion(movement, await xr, featureManager, [ground], scene)
 
+        //hand tracking
+        try {
+            featureManager.enableFeature(WebXRFeatureName.HAND_TRACKING, "latest", {
+                xrInput: xr.input,
+                jointMeshes: {
+                    disabledDefaultHandMesh: false,
+                }
+            })
+        } catch (error) {
+            console.log(error)
+        }
+
+        //enabled features
+        console.log(featureManager.getEnabledFeatures())
+
         return scene
     }
 
