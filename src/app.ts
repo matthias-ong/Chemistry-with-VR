@@ -189,16 +189,15 @@ export class App {
         for (const mesh of this.molecules) {
             mesh.dispose();
         }
-
-
-
+        this.molecules = []
         this.setUpInteractableSection(scene)
+        console.log(this.molecules)
     }
 
     async setUpInteractableSection(scene: Scene) {
 
 
-        const interactableText = new TextPlane("Test your knowledge here ('R' to reset)", "white", 50, "interactable", 15, 1, -9, 3, -7, "", scene)
+        const interactableText = new TextPlane("Test your knowledge here ('R' to reset if on keyboard)", "white", 50, "interactable", 15, 1, -9, 3, -7, "", scene)
         interactableText.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
 
@@ -432,4 +431,25 @@ export class App {
             )
         )
     }
+
+    // async updateCollider() {
+    //     this.molecules.forEach((molecule) => {
+    //         this.molecules.forEach(async (other) => {
+    //             if (other === molecule)
+    //                 return;
+    //             if (molecule?.intersectsMesh(other, false, true)) {
+    //                 const H20 = this.molecules.find(o => o.name === 'H2O');
+    //                 if (H20 != null) {
+    //                     H20?.setEnabled(true)
+    //                 }
+    //             }
+    //             else {
+    //                 const H20 = this.molecules.find(o => o.name === 'H2O');
+    //                 if (H20 != null) {
+    //                     H20?.setEnabled(false)
+    //                 }
+    //             }
+    //         })
+    //     })
+    // }
 }
