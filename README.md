@@ -44,7 +44,7 @@ After following the instructions to install and run XRAuthor container. Ensure t
 ![](https://github.com/ToM4tto/CSD3120-IPA/blob/main/screenshots/xrauthorComplete.png)
 
 ## How to run as standalone on a browser locally?
-Ensure you have [**Python**](https://www.python.org/) installed as we will be using a Python server. Check that the `dist/app` folder is there and it contains the HTML and JS files, if not do `npm run build` to generate them.
+Ensure you have [**Python**](https://www.python.org/) installed as we will be using a Python server. Check that the `dist/app` folder is there and it contains the HTML and JS files, if not do `npm run build` to generate them. You may of course use other servers if you would like, alternatively, you can launch the developmental build's **webpack** server.
 
 **Step 1**: Run the command ``python -m http.server`
 
@@ -73,7 +73,8 @@ This is a full VR application and it has been tested using Oculus Quest from the
 - `Pinch Scaling`: Alternatively, you may use left and right controllers separately, point at the same target and pinch with both controllers open/close to scale the molecule.
 
 `Gizmo` mode once activated will output on the console. After turning it on, click on an interactable model in the practice area (**NOT** the video tutorial area) to bring out the Gizmo tools.
+Note that **rotation** for non-uniform scaling is **NOT SUPPORTED!**
 
 **Completion**:
-After successfully completing the interaction, you will see `Particles and a Sound effect` for a few seconds as feedback.
+After successfully completing the practice interaction, you will see `Particles and a Sound effect` for a few seconds as feedback.
 ![](https://github.com/ToM4tto/CSD3120-IPA/blob/main/screenshots/correct.png)

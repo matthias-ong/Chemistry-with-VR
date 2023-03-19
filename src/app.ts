@@ -27,8 +27,8 @@ export class App {
     private molecules: AbstractMesh[] = []
     private gizmoManager: GizmoManager
 
-    //Rotation
-    private isRotating = false;
+    //None / Rotation / Scale (0, 1, 2)
+    private isRotating: number = 0;
 
     //activity bools
     private initialLoad: boolean = false
@@ -249,13 +249,16 @@ export class App {
             })
             //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
             pointerDragBehaviour.onDragStartObservable.add(evtData => {
-                if (this.isRotating) {
+                if (this.isRotating != 0) {
                     // Handle rotation
                     this.gizmoManager.attachableMeshes = this.molecules
                     console.log("Rotate start: object id = " + mesh.id)
                     this.gizmoManager.positionGizmoEnabled = false
-                    this.gizmoManager.scaleGizmoEnabled = true
                     this.gizmoManager.rotationGizmoEnabled = true
+                    if (this.isRotating === 2) {
+                        this.gizmoManager.rotationGizmoEnabled = false
+                        this.gizmoManager.scaleGizmoEnabled = true
+                    }
 
                     //gizmoManager.dispose();
 
@@ -470,12 +473,14 @@ export class App {
                 pointerInfo.event.button === 0
             ) {
                 // Toggle rotation mode
-                this.isRotating = !this.isRotating;
+                this.isRotating = this.isRotating + 1;
+                if (this.isRotating > 2)
+                    this.isRotating = 0
                 //reset gizmo
                 this.gizmoManager.attachableMeshes = [];
                 this.gizmoManager.rotationGizmoEnabled = false
                 this.gizmoManager.scaleGizmoEnabled = false
-                console.log("Rotation mode: " + this.isRotating);
+                console.log("Gizmo mode: " + this.isRotating);
             }
         });
 
