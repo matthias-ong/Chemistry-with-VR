@@ -200,7 +200,7 @@ export class App {
         this.molecules = []
         this.setUpInteractableSection(scene)
 
-        //console.log(this.molecules)
+        console.log("Reset practice area")
     }
 
     /**
