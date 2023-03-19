@@ -200,7 +200,7 @@ export class App {
         this.molecules = []
         this.setUpInteractableSection(scene)
 
-        console.log(this.molecules)
+        //console.log(this.molecules)
     }
 
     /**
@@ -212,8 +212,12 @@ export class App {
         const interactableText = new TextPlane("Practice here ('R' to reset for keyboard), refer to tutorial if you are lost", "white", 50, "interactable", 18, 1, -9, 3, -7, "", scene)
         interactableText.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
-        const hint = new TextPlane("Synthesize Water! Turn on audio!", "white", 50, "hint", 15, 1, -9, 2, -7, "", scene)
+        const hint = new TextPlane("Synthesize Water! Turn on audio!", "lightblue", 50, "hint", 15, 1, -9, 2, -7, "", scene)
         hint.setRotation(new Vector3(0, -Math.PI / 2, 0))
+
+        const reset = new TextPlane("Click to Reset", "red", 50, "reset", 5, 1, -9, 1, -15, "", scene)
+        reset.setRotation(new Vector3(0, -Math.PI / 2, 0))
+        reset.addButton(() => { this.resetInteractableSection(scene) })
 
         const H2 = await MeshExt.CreateExtModel(new MeshExt("m4", scene), "m4", this.data);
         const O2 = await MeshExt.CreateExtModel(new MeshExt("m6", scene), "m6", this.data);

@@ -46,22 +46,24 @@ export class TextPlane {
         textPlane.setParent(root)
         this.textPlane = textPlane
         this.textBlock = planeText
-        //Add interaction to make it into a button
-        // this.textBlock.onPointerUpObservable.add(eventData => {
-        //     //alert("Hello Text at:\n x: " + eventData.x + " y:" + eventData)
-        // })
-        // //Works for VR controls too
-        // this.textBlock.onPointerDownObservable.add(() => {
-        //     this.sound.play()
-        // })
     }
-
     /**
      * This function is used to rotate the created TextPlane
      * @param rotation 
      */
     setRotation(rotation: Vector3) {
         this.textPlane.rotation.set(rotation.x, rotation.y, rotation.z)
+    }
+
+    addButton(function1: () => void) {
+        //Add interaction to make it into a button
+        this.textBlock.onPointerUpObservable.add(eventData => {
+            //alert("Hello Text at:\n x: " + eventData.x + " y:" + eventData)
+        })
+        //Works for VR controls too
+        this.textBlock.onPointerDownObservable.add(() => {
+            function1()
+        })
     }
 
 }

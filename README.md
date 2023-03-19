@@ -57,13 +57,18 @@ This is a full VR application and it has been tested using Oculus Quest from the
 
 **Desktop controls**:
 - `Movement` - Arrow Keys
+- `Look` - Hold down left click and move down (ensure mouse is not clicking on interactable)
 - `Select and pick`: Left click
 - `Dragging`: Mouse to drag molecules and/or move Guizmos
-- `Reset`: Press `R` to reset the interactable models in the practice area.
+- `Reset`: Press `R` to reset the interactable models in the practice area or use the `Click to Reset` button.
 - `Rotation + Scaling`: Double left click to toggle `Gizmo` mode on or off (this is printed on the console), after turning it on, click on a interactable model in the practice area (**NOT** the video tutorial area).
 
 **VR mode**:
 - `Locomotion`: Using either left and right controller, aim onto a target on the ground and squeeze the button once to `teleport` to that location.
+- `Look` - Move VR Device
+- `Select and pick`: Controller squeezed and point at target
+- `Dragging`: After selecting, move controller to destination
+- `Reset`: Press `Click to Reset` button to reset the interactable models in the practice area.
 - `Rotation + Scaling`: Squeeze the button twice repeatedly to toggle `Gizmo` mode on or off (this is printed on the console), after turning it on, click on a interactable model in the practice area (not the video tutorial area).
 - `Pinch Scaling`: Alternatively, you may use left and right controllers separately, point at the same target and pinch with both controllers open/close to scale the molecule.
 
