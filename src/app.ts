@@ -467,6 +467,10 @@ export class App {
             ) {
                 // Toggle rotation mode
                 this.isRotating = !this.isRotating;
+                //reset gizmo
+                this.gizmoManager.attachableMeshes = [];
+                this.gizmoManager.rotationGizmoEnabled = false
+                this.gizmoManager.scaleGizmoEnabled = false
                 console.log("Rotation mode: " + this.isRotating);
             }
         });

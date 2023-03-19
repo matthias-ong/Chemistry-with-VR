@@ -5,8 +5,10 @@ By: Matthias Ong Si En (2000987)
 ## Introduction
 This project exports into an [**XRAuthor**](https://hub.docker.com/r/immersification/xrauthor) extension. Please follow the instructions on the Docker Hub to install XRAuthor first, alternatively, you may run this as a standalone app inside dist/app folder. Although you need to host a Python server locally for that. 
 
-This projects creates a 3D VR scene in order to teach students about Chemistry, particularly synthesis reactions. The 3D scene takes place in a classroom, there is a video screen that plays a recorded lecture in the event the student get stuck. The main interaction area is where students will combine the molecules using what they learnt to apply their knowledge. Screenshots are shown below.
+This projects creates a 3D VR scene in order to teach students about Chemistry, specifically synthesis reactions. The 3D scene takes place in a classroom, there is a video screen that plays a recorded lecture in the event the student get stuck. The main interaction area is where students will combine the molecules into H2O using what they learnt to apply their knowledge. Screenshots are shown below.
+**Tutorial area**:
 ![](https://github.com/ToM4tto/CSD3120-IPA/blob/main/screenshots/tutorial.png)
+**Practice area**:
 ![](https://github.com/ToM4tto/CSD3120-IPA/blob/main/screenshots/practice.png)
 
 ## Project hierarchy
@@ -57,15 +59,15 @@ This is a full VR application and it has been tested using Oculus Quest from the
 - `Movement` - Arrow Keys
 - `Select and pick`: Left click
 - `Dragging`: Mouse to drag molecules and/or move Guizmos
-- `Reset`: Press `R` to reset the interactable models in the application area.
-- `Rotation + Scaling`: Double left click to toggle `Gizmo` mode on or off (this is printed on the console), after turning it on, click on a interactable model in the activity area (**NOT** the video tutorial area).
+- `Reset`: Press `R` to reset the interactable models in the practice area.
+- `Rotation + Scaling`: Double left click to toggle `Gizmo` mode on or off (this is printed on the console), after turning it on, click on a interactable model in the practice area (**NOT** the video tutorial area).
 
 **VR mode**:
 - `Locomotion`: Using either left and right controller, aim onto a target on the ground and squeeze the button once to `teleport` to that location.
-- `Rotation + Scaling`: Squeeze the button twice repeatedly to toggle `Gizmo` mode on or off (this is printed on the console), after turning it on, click on a interactable model in the application area (not the video tutorial area).
+- `Rotation + Scaling`: Squeeze the button twice repeatedly to toggle `Gizmo` mode on or off (this is printed on the console), after turning it on, click on a interactable model in the practice area (not the video tutorial area).
 - `Pinch Scaling`: Alternatively, you may use left and right controllers separately, point at the same target and pinch with both controllers open/close to scale the molecule.
 
-`Gizmo` mode once activated will output on the console. After turning it on, click on an interactable model in the activity area (**NOT** the video tutorial area) to bring out the Gizmo tools.
+`Gizmo` mode once activated will output on the console. After turning it on, click on an interactable model in the practice area (**NOT** the video tutorial area) to bring out the Gizmo tools.
 
 **Completion**:
 After successfully completing the interaction, you will see `Particles and a Sound effect` for a few seconds as feedback.
