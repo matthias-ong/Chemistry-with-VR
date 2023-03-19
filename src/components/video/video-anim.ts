@@ -1,3 +1,6 @@
+/**
+ * This file is used to abstract away the setting up of the Video Animation to animate the molecules according to the video using component architecture
+ */
 import { Vector3, Matrix, AnimationGroup, SceneLoader, Animation, PointerDragBehavior, ActionManager, InterpolateValueAction, Color3, PredicateCondition, SetValueAction, AbstractMesh, ExecuteCodeAction, Behavior } from "babylonjs";
 import { Mesh } from "babylonjs/Meshes/mesh";
 import { Scene } from "babylonjs/scene";
@@ -17,6 +20,14 @@ export class XRAuthorTutorialAnimation {
 
     //private pointerDragBehaviour: PointerDragBehavior
 
+    /**
+     * Loads the Tutorial an async function
+     * @param name 
+     * @param ids 
+     * @param data 
+     * @param videoPlane 
+     * @param scene 
+     */
     public async loadTutorialAnimAsync(
         name: string,
         ids: string[],
@@ -71,6 +82,11 @@ export class XRAuthorTutorialAnimation {
         //this.initMoveAction("m3: H2O", "m4: H2") //using scene actionManager
     }
 
+    /**
+     * Unused function to init Movement using actions
+     * @param firstID 
+     * @param secondID 
+     */
     private initMoveAction(firstID: string, secondID: string) {
         // Get the meshes
         const firstMesh = this.scene.getMeshById(firstID);

@@ -1,3 +1,6 @@
+/**
+ * This file is used to abstract away the setting up of the VideoPlane to play the tutorial video from XRAuthor using component architecture
+ */
 import { MeshBuilder, VideoTexture, StandardMaterial, Color3, Scene, AnimationGroup, Vector3 } from "babylonjs"
 import { Mesh } from "babylonjs/Meshes/mesh"
 import { AuthoringData } from "xrauthor-loader"

@@ -3,6 +3,9 @@ import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 import { Lights, MeshExt, TextPlane, XRAuthorTutorialAnimation, XRAuthorVideoPlane } from "./components"
 
+/**
+ * This contains all the XR locomotive modes supported for this app
+ */
 enum MovementMode {
     Teleportation,
     Controller,
@@ -19,17 +22,17 @@ enum MovementMode {
 export class App {
     private engine: Engine /** Contains the Babylon Engine instance */
     private canvas: HTMLCanvasElement /** Contains the HTMLCanvasElement that will be rendered into */
-    private sound: Sound
+    //private sound: Sound
     private data: AuthoringData /** Authoring data from  XRAuthor */
     private molecules: AbstractMesh[] = []
     private gizmoManager: GizmoManager
-    private ground: AbstractMesh[] = []
 
     //Rotation
     private isRotating = false;
+
+    //activity bools
     private initialLoad: boolean = false
     private completed: boolean = false
-
 
     public modelIDs: string[] =
         ["m3", //h2o
@@ -90,17 +93,11 @@ export class App {
         /*for debugging on browser console - pass xr to window object*/
         (window as any).xr = xr //cast the window obj to be any
 
-        const ground = MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene)
-        ground.position.y = -2.6
-        ground.position.z = -5.5
-        const groundMaterial = new StandardMaterial("groundMaterial", scene);
-        ground.material = groundMaterial;
-
         const featureManager = (await xr).baseExperience.featuresManager
         console.log(WebXRFeaturesManager.GetAvailableFeatures())
         // locomotion
         const movement = MovementMode.Teleportation;
-        this.initLocomotion(movement, await xr, featureManager, [ground], scene)
+        this.initLocomotion(movement, await xr, featureManager, scene)
 
         //hand tracking
         try {
@@ -161,6 +158,7 @@ export class App {
         )
     }
 
+    /** This function creates the default camera for the scene */
     createCamera(scene: Scene) {
         // just default camera for now
         scene.createDefaultCamera(false, true, true)
@@ -169,6 +167,11 @@ export class App {
 
     }
 
+    /**
+     * This function loads the Classroom model, it is an async function
+     * @param scene 
+     * @returns Promise<void>
+     */
     async loadClassroom(scene: Scene) {
         //async so the loading doesnt stall
         return SceneLoader.ImportMeshAsync("", "assets/extra_models/", "classroom.glb", scene).then(result => {
@@ -179,12 +182,15 @@ export class App {
             root.position.z = -3.5
             root.rotation = new Vector3(0, Math.PI / 2, 0) //rotation around z
             root.scaling.setAll(2.5)
-            this.ground.push(root)
         })
         //async functions are basically a promise so if you want to do transformation you need callback functions instead
         //of calling transforms/anims after the importMesh function
     }
 
+    /**
+     * This function resets the main interaction activity
+     * @param scene 
+     */
     resetInteractableSection(scene: Scene) {
         this.completed = false
         this.initialLoad = false
@@ -197,6 +203,10 @@ export class App {
         console.log(this.molecules)
     }
 
+    /**
+     * 
+     * @param scene This function sets up the main interaction activity
+     */
     async setUpInteractableSection(scene: Scene) {
 
         const interactableText = new TextPlane("Test your knowledge here ('R' to reset if on keyboard)", "white", 50, "interactable", 15, 1, -9, 3, -7, "", scene)
@@ -280,7 +290,21 @@ export class App {
         })
     }
 
-    initLocomotion(movement: MovementMode, xr: WebXRDefaultExperience, featureManager: WebXRFeaturesManager, ground: AbstractMesh[], scene: Scene) {
+    /**
+     * This function loads the Ground mesh and sets up the various locomotion options based on parameters
+     * @param movement The MovementMode chosen for the app
+     * @param xr WebXRDefaultExperience
+     * @param featureManager WebXRFeaturesManager
+     * @param ground The ground mesh used for locomotion only
+     * @param scene 
+     */
+    initLocomotion(movement: MovementMode, xr: WebXRDefaultExperience, featureManager: WebXRFeaturesManager, scene: Scene) {
+        const ground = MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene)
+        ground.position.y = -2.6
+        ground.position.z = -5.5
+        const groundMaterial = new StandardMaterial("groundMaterial", scene);
+        ground.material = groundMaterial;
+
         switch (movement) {
             case MovementMode.Teleportation:
                 console.log("movement mode: " + movement.toString())
@@ -288,13 +312,13 @@ export class App {
                     WebXRFeatureName.TELEPORTATION, "stable",
                     {
                         xrInput: xr.input,
-                        floorMeshes: ground,
+                        floorMeshes: [ground],
                         timeToTeleport: 1000, //wait 1 second
                         useMainComponentOnly: true,
                         defaultTargetMesgOptions: { //specify indicator
                             teleportationFillColor: "#55FF99",
                             teleportationBorderColor: "blue",
-                            torusArrowMaterial: ground[0].material, //we reuse material of ground
+                            torusArrowMaterial: ground.material, //we reuse material of ground
 
                         },
                     },
@@ -328,6 +352,11 @@ export class App {
         }
     }
 
+    /**
+     * This function creates particles, it is used for the winning condition
+     * @param pos Position of the particles
+     * @param scene 
+     */
     async createParticles(pos: Vector3, scene: Scene) {
         const particleSystem = new ParticleSystem("particles", 5000, scene)
         particleSystem.particleTexture = new Texture("assets/textures/flare.png", scene)
@@ -371,15 +400,23 @@ export class App {
         const music = new Sound("music", "assets/sounds/music.mp3", scene, null, {
             loop: true, autoplay: false
         })
-        this.sound = music
+        //this.sound = music
     }
 
+    /**
+     * This function is used to create all the light in the scene, it uses the abstracted custom Lights class
+     * @param scene 
+     */
     createLights(scene: Scene) {
         const lights = new Lights(scene);
         lights.addHemisphericLight("first", new Vector3(-1, 1, 0), 0.3, new Color3(1, 1, 1))
         //lights.addPointLight("2", new Vector3(1, 1, 1), new Vector3(0, 4, 5), 10, new Color3(0, 1, 0))
     }
 
+    /**
+     * This function creates a skybox to surround the scene with
+     * @param scene 
+     */
     createSkybox(scene: Scene) {
         const skybox = MeshBuilder.CreateBox('skybox', { size: 1000 }, scene)
         const skyboxMaterial = new StandardMaterial('skybox-mat')
@@ -414,6 +451,11 @@ export class App {
         })
     }
 
+    /**
+     * This function is used to setup any global observables and keyboard inputs that should
+     * last the entire runtime of the app
+     * @param scene 
+     */
     addGlobalInputs(scene: Scene) {
 
         // Listen for double-tap events to change to rotate mode
@@ -454,6 +496,10 @@ export class App {
         )
     }
 
+    /**
+     * This function handles the collision logic of molecules and plays the victory feedback
+     * @param scene 
+     */
     async updateCollider(scene: Scene) {
         const H2 = this.molecules[0]
         const O2 = this.molecules[1]

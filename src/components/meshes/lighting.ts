@@ -1,3 +1,6 @@
+/**
+ * An abstraction of the lights using component architecture for organisation
+ */
 import { HemisphericLight, Vector3, Color3, Light, PointLight } from "babylonjs"
 import { Scene } from "babylonjs/scene"
 
@@ -6,6 +9,13 @@ export class Lights {
     constructor(scene: Scene) { this.scene = scene }
     public lights: LightSource[] = []
 
+    /**
+     * This function creates a HemisphericLight
+     * @param name 
+     * @param direction 
+     * @param intensity 
+     * @param diffuseColor 
+     */
     addHemisphericLight(
         name: string,
         direction: Vector3,
@@ -17,6 +27,14 @@ export class Lights {
         this.lights.push(new LightSource(name, hemiLight))
     }
 
+    /**
+     * This function creates a PointLight
+     * @param name 
+     * @param position 
+     * @param direction 
+     * @param intensity 
+     * @param diffuseColor 
+     */
     addPointLight(
         name: string,
         position: Vector3,
@@ -31,6 +49,11 @@ export class Lights {
         this.lights.push(new LightSource(name, pointLight))
     }
 
+    /**
+     * This function changes the colour of a specific light given the name of the light
+     * @param name 
+     * @param color 
+     */
     changeColor(name: string, color: Color3) {
         for (let i = 0; i < this.lights.length; i++) {
             if (this.lights[i].id === name) {
@@ -55,6 +78,9 @@ export class Lights {
     }
 }
 
+/**
+ * A wrapper over the Babylon Light class
+ */
 class LightSource {
     public id: string
     public light: Light

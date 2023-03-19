@@ -1,3 +1,6 @@
+/**
+ * This file abstracts away the details needed to create text using component architecture
+ */
 import { Mesh, MeshBuilder, Vector3 } from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AbstractMesh } from "babylonjs/Meshes/abstractMesh"
@@ -53,6 +56,10 @@ export class TextPlane {
         // })
     }
 
+    /**
+     * This function is used to rotate the created TextPlane
+     * @param rotation 
+     */
     setRotation(rotation: Vector3) {
         this.textPlane.rotation.set(rotation.x, rotation.y, rotation.z)
     }

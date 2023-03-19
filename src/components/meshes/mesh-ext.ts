@@ -1,14 +1,23 @@
+/**
+ * This file extends the AbstractMesh class to suit Meshes loaded directly from XRAuthor, this is part of the component architecture
+ */
 import { AbstractMesh, ActionManager, AnimationGroup, Animation, Mesh, Observable, PointerDragBehavior, SceneLoader, Vector3, InterpolateValueAction, Color3, PredicateCondition, StringDictionary, ExecuteCodeAction, Quaternion } from "babylonjs";
 import { Scene } from "babylonjs/scene"
 import { AuthoringData } from "xrauthor-loader";
 import { TextPlane } from "../../components"
 
+/**
+ * An interface (optional usage here) but I used it, it has the label text and stores the scene
+ */
 export interface TheMesh {
     scene: Scene;
     mesh: AbstractMesh;
     label: TextPlane;
 }
 
+/**
+ * MeshExt class that contains all the features needed to make it appear like XRAuthor models as much as possible, with labels, etc
+ */
 export class MeshExt extends AbstractMesh implements TheMesh {
     scene: Scene;
     mesh: AbstractMesh;
@@ -20,6 +29,13 @@ export class MeshExt extends AbstractMesh implements TheMesh {
         this.name = name
     }
 
+    /**
+     * This function creates MeshExt without any video animation data
+     * @param meshExt 
+     * @param id 
+     * @param data AuthoringData to retrieve models and other info from XRAuthor
+     * @returns 
+     */
     public static CreateExtModel(meshExt: MeshExt, id: string, data: AuthoringData): Promise<MeshExt> {
         const info = data.recordingData.modelInfo[id]
         const label = info.label
@@ -106,6 +122,10 @@ export class MeshExt extends AbstractMesh implements TheMesh {
         })
 
     }
+
+    /**
+     * Unused custom actions function
+     */
     private initActions() {
         console.log(this)
         const actionManager = this.mesh.actionManager = new ActionManager(this.scene)
