@@ -26,9 +26,9 @@ export class App {
     private ground: AbstractMesh[] = []
 
     //Rotation
-    private initialMeshPosition: Vector3;
     private isRotating = false;
-    //private xr: WebXRDefaultExperience
+    private initialLoad: boolean = false
+    private completed: boolean = false
 
 
     public modelIDs: string[] =
@@ -186,32 +186,43 @@ export class App {
     }
 
     resetInteractableSection(scene: Scene) {
+        this.completed = false
+        this.initialLoad = false
         for (const mesh of this.molecules) {
             mesh.dispose();
         }
         this.molecules = []
         this.setUpInteractableSection(scene)
+
         console.log(this.molecules)
     }
 
     async setUpInteractableSection(scene: Scene) {
 
-
         const interactableText = new TextPlane("Test your knowledge here ('R' to reset if on keyboard)", "white", 50, "interactable", 15, 1, -9, 3, -7, "", scene)
         interactableText.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
+        const hint = new TextPlane("Synthesize Water! Turn on audio", "white", 50, "hint", 15, 1, -9, 2, -7, "", scene)
+        hint.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
         const H2 = await MeshExt.CreateExtModel(new MeshExt("m4", scene), "m4", this.data);
         const O2 = await MeshExt.CreateExtModel(new MeshExt("m6", scene), "m6", this.data);
         const H2O = await MeshExt.CreateExtModel(new MeshExt("m3", scene), "m3", this.data);
 
+        H2.position = new Vector3(-7, 1, -4)
+        O2.position = new Vector3(-7, 1, 0)
+        H2O.position.z = -20 //out of map first
+
+        H2.computeWorldMatrix(); //fully set the new positions before continuing
+        O2.computeWorldMatrix();
+        H2O.computeWorldMatrix();
+
         this.molecules.push(H2)
         this.molecules.push(O2)
         this.molecules.push(H2O)
 
-        H2.position = new Vector3(-7, 0, -4)
-        O2.position = new Vector3(-7, 0, 0)
-        H2O.position.z = -20 //out of map first
+
+        this.initialLoad = true
 
         //this.createParticles(H2.position, scene)
 
@@ -228,10 +239,10 @@ export class App {
                     // Handle rotation
                     this.gizmoManager.attachableMeshes = this.molecules
                     console.log("Rotate start: object id = " + mesh.id)
-                    console.log(this.gizmoManager.attachableMeshes)
                     this.gizmoManager.positionGizmoEnabled = false
                     this.gizmoManager.scaleGizmoEnabled = false
                     this.gizmoManager.rotationGizmoEnabled = true
+
                     //gizmoManager.dispose();
 
                 }
@@ -239,7 +250,6 @@ export class App {
                     // Handle dragging
                     console.log("Drag start: object id = " + mesh.id)
                     this.gizmoManager.rotationGizmoEnabled = false
-                    this.gizmoManager.isHovered
                     this.gizmoManager.attachableMeshes = [];
                 }
                 console.log(evtData);
@@ -260,16 +270,13 @@ export class App {
             //gizmoManager.boundingBoxGizmoEnabled = true
         }
 
-
-
-
         //use observables
         // 1. create an observable for detecing intersections
-        const onIntersectionObservable = new Observable<Boolean>()
+        // Register a callback function to be called before rendering each frame
+
         scene.registerBeforeRender(function () {
             //if (scene.activeCamera.position.y < 0.4 || scene.activeCamera.position.y > 0.6) //threshold for height
             scene.activeCamera.position.y = 0.5
-            //const isIntersecting = 
         })
     }
 
@@ -321,7 +328,7 @@ export class App {
         }
     }
 
-    createParticles(pos: Vector3, scene: Scene) {
+    async createParticles(pos: Vector3, scene: Scene) {
         const particleSystem = new ParticleSystem("particles", 5000, scene)
         particleSystem.particleTexture = new Texture("assets/textures/flare.png", scene)
 
@@ -350,6 +357,10 @@ export class App {
 
         particleSystem.gravity = new Vector3(0, -9.8, 0)
         particleSystem.start()
+
+        // Wait for a brief period to allow the models to settle
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        particleSystem.stop()
     }
 
     /**
@@ -417,6 +428,17 @@ export class App {
             }
         });
 
+        const onBeforeRenderObservable = scene.onBeforeRenderObservable.add(() => {
+            // Only call updateCollider() if the molecules array has 3 elements
+            if (this.molecules.length === 3) {
+                if (this.initialLoad && !this.completed) {
+                    //console.log(this.initialLoad)
+                    this.updateCollider(scene);
+                }
+
+            }
+        });
+
         //KEYBOARD SUPPORT!
         scene.actionManager.registerAction(
             new ExecuteCodeAction(
@@ -432,24 +454,31 @@ export class App {
         )
     }
 
-    // async updateCollider() {
-    //     this.molecules.forEach((molecule) => {
-    //         this.molecules.forEach(async (other) => {
-    //             if (other === molecule)
-    //                 return;
-    //             if (molecule?.intersectsMesh(other, false, true)) {
-    //                 const H20 = this.molecules.find(o => o.name === 'H2O');
-    //                 if (H20 != null) {
-    //                     H20?.setEnabled(true)
-    //                 }
-    //             }
-    //             else {
-    //                 const H20 = this.molecules.find(o => o.name === 'H2O');
-    //                 if (H20 != null) {
-    //                     H20?.setEnabled(false)
-    //                 }
-    //             }
-    //         })
-    //     })
-    // }
+    async updateCollider(scene: Scene) {
+        const H2 = this.molecules[0]
+        const O2 = this.molecules[1]
+        const H2O = this.molecules[2]
+        //console.log(H2.position.y, O2.position.y)
+        if (H2.intersectsMesh(O2, false, true)) {
+
+            console.log("Intersect to form H2O")
+            //H2O.setEnabled(true)
+            H2O.position = this.molecules[0].position
+            H2.setEnabled(false)
+            O2.setEnabled(false)
+            this.completed = true
+            this.createParticles(this.molecules[0].position, scene)
+
+            const bubbles = new Sound("music", "assets/sounds/bubbles.mp3", scene, null, {
+                loop: true, autoplay: true
+            })
+
+            setTimeout(() => {
+                bubbles.stop();
+            }, 2500); // Stop after 2 seconds
+        }
+        else {
+            //H2O.setEnabled(false)
+        }
+    }
 }
