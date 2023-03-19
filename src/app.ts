@@ -135,7 +135,7 @@ export class App {
 
         //tutorialAnimation.initCollisionAction("m3: H2O", "m4: H2")
 
-        const tutorialText = new TextPlane("Can't remember? Click on the video to play/pause", "white", 50, "tutorial", 15, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y, tutorialVideoPlane.pos.z, "", scene)
+        const tutorialText = new TextPlane("Tutorial: Can't remember? Click on the video to play/pause", "white", 50, "tutorial", 16, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y, tutorialVideoPlane.pos.z, "", scene)
 
         // ---------------- VIDEO CONTROLS (PAUSE PLAY) ----------------
         //VideoTexture is not part of gui need implement controls manually as observers of scene
@@ -209,10 +209,10 @@ export class App {
      */
     async setUpInteractableSection(scene: Scene) {
 
-        const interactableText = new TextPlane("Test your knowledge here ('R' to reset if on keyboard)", "white", 50, "interactable", 15, 1, -9, 3, -7, "", scene)
+        const interactableText = new TextPlane("Practice here ('R' to reset for keyboard), refer to tutorial if you are lost", "white", 50, "interactable", 18, 1, -9, 3, -7, "", scene)
         interactableText.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
-        const hint = new TextPlane("Synthesize Water! Turn on audio", "white", 50, "hint", 15, 1, -9, 2, -7, "", scene)
+        const hint = new TextPlane("Synthesize Water! Turn on audio!", "white", 50, "hint", 15, 1, -9, 2, -7, "", scene)
         hint.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
         const H2 = await MeshExt.CreateExtModel(new MeshExt("m4", scene), "m4", this.data);
