@@ -55,6 +55,10 @@ export class TextPlane {
         this.textPlane.rotation.set(rotation.x, rotation.y, rotation.z)
     }
 
+    /**
+     * This function adds button functionality to TextPlane
+     * @param function1 Callback function to run on click
+     */
     addButton(function1: () => void) {
         //Add interaction to make it into a button
         this.textBlock.onPointerUpObservable.add(eventData => {
