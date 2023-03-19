@@ -1,4 +1,4 @@
-import { MeshBuilder } from "babylonjs"
+import { Mesh, MeshBuilder, Vector3 } from "babylonjs"
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui"
 import { AbstractMesh } from "babylonjs/Meshes/abstractMesh"
 import { Scene } from "babylonjs/scene"
@@ -8,6 +8,7 @@ import { Scene } from "babylonjs/scene"
  */
 export class TextPlane {
     public textBlock: TextBlock //public to insert callbacks
+    private textPlane: Mesh
     constructor(
         text: string,
         textColor: string,
@@ -40,6 +41,7 @@ export class TextPlane {
         planeText.fontSize = fontSize
         planeTexture.addControl(planeText) //pass the textBlock to show as texture
         textPlane.setParent(root)
+        this.textPlane = textPlane
         this.textBlock = planeText
         //Add interaction to make it into a button
         // this.textBlock.onPointerUpObservable.add(eventData => {
@@ -49,6 +51,10 @@ export class TextPlane {
         // this.textBlock.onPointerDownObservable.add(() => {
         //     this.sound.play()
         // })
+    }
+
+    setRotation(rotation: Vector3) {
+        this.textPlane.rotation.set(rotation.x, rotation.y, rotation.z)
     }
 
 }

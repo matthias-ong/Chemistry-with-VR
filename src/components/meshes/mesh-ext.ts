@@ -1,4 +1,4 @@
-import { AbstractMesh, ActionManager, AnimationGroup, Animation, Mesh, Observable, PointerDragBehavior, SceneLoader, Vector3, InterpolateValueAction, Color3, PredicateCondition, StringDictionary, ExecuteCodeAction } from "babylonjs";
+import { AbstractMesh, ActionManager, AnimationGroup, Animation, Mesh, Observable, PointerDragBehavior, SceneLoader, Vector3, InterpolateValueAction, Color3, PredicateCondition, StringDictionary, ExecuteCodeAction, Quaternion } from "babylonjs";
 import { Scene } from "babylonjs/scene"
 import { AuthoringData } from "xrauthor-loader";
 import { TextPlane } from "../../components"
@@ -37,6 +37,10 @@ export class MeshExt extends AbstractMesh implements TheMesh {
                 //generate label text a bit below and behind model
                 const labelPlane = new TextPlane(label, "purple", 50, root.id, 2.5, 1, 0, -0.5, -0.1, "", meshExt.scene, root)
                 meshExt.mesh = root
+                meshExt.addChild(root);
+
+                // set the rotationQuaternion to a non-null value
+                meshExt.rotationQuaternion = Quaternion.RotationYawPitchRoll(0, 0, 0);
 
             }
             else {

@@ -1,4 +1,4 @@
-import { AbstractMesh, ActionManager, Camera, Color3, Color4, CubeTexture, Engine, HemisphericLight, InterpolateValueAction, Matrix, Mesh, MeshBuilder, Observable, ParticleSystem, PointerEventTypes, PointLight, Scene, SceneLoader, Sound, StandardMaterial, Texture, TransformNode, UniversalCamera, Vector3, VideoDome, VideoTexture, WebXRDefaultExperience, WebXRFeatureName, WebXRFeaturesManager, WebXRMotionControllerTeleportation } from "babylonjs"
+import { AbstractMesh, ActionManager, Camera, Color3, Color4, CubeTexture, Engine, ExecuteCodeAction, GizmoManager, HemisphericLight, InterpolateValueAction, Matrix, Mesh, MeshBuilder, MultiPointerScaleBehavior, Observable, ParticleSystem, PointerDragBehavior, PointerEventTypes, PointLight, Quaternion, Scene, SceneLoader, Sound, StandardMaterial, Texture, TransformNode, UniversalCamera, Vector3, VideoDome, VideoTexture, WebXRDefaultExperience, WebXRFeatureName, WebXRFeaturesManager, WebXRMotionControllerTeleportation } from "babylonjs"
 import { AuthoringData } from "xrauthor-loader"
 import 'babylonjs-loaders'
 import { Lights, MeshExt, TextPlane, XRAuthorTutorialAnimation, XRAuthorVideoPlane } from "./components"
@@ -22,11 +22,21 @@ export class App {
     private sound: Sound
     private data: AuthoringData /** Authoring data from  XRAuthor */
     private molecules: AbstractMesh[] = []
+    private gizmoManager: GizmoManager
     private ground: AbstractMesh[] = []
+
+    //Rotation
+    private initialMeshPosition: Vector3;
+    private isRotating = false;
     //private xr: WebXRDefaultExperience
 
 
-    public modelIDs: string[] = ["m3", "m4", "m6", "m9", "m11"]
+    public modelIDs: string[] =
+        ["m3", //h2o
+            "m4", //h2
+            "m6", //o2
+            "m9", //h2o
+            "m11"] //h2
 
     constructor(engine: Engine, canvas: HTMLCanvasElement
         , authoringData: AuthoringData) {
@@ -104,6 +114,12 @@ export class App {
             console.log(error)
         }
 
+        //Gizmo support
+        this.gizmoManager = new GizmoManager(scene)
+
+        //Keyboard support!
+        this.addGlobalInputs(scene)
+
         //enabled features
         console.log(featureManager.getEnabledFeatures())
 
@@ -169,23 +185,91 @@ export class App {
         //of calling transforms/anims after the importMesh function
     }
 
-    async setUpInteractableSection(scene: Scene) {
-        const promises: Promise<MeshExt>[] = []
-        for (const id of this.modelIDs) {
-            promises.push(MeshExt.CreateExtModel(new MeshExt(id, scene), id, this.data))
+    resetInteractableSection(scene: Scene) {
+        for (const mesh of this.molecules) {
+            mesh.dispose();
         }
 
-        await Promise.all(promises).then(meshes => {
-            this.molecules = promises.map((promise, index) => meshes[index].mesh)
-        })
-        this.molecules[0].position.set(0, 1, 5)
+
+
+        this.setUpInteractableSection(scene)
+    }
+
+    async setUpInteractableSection(scene: Scene) {
+
+
+        const interactableText = new TextPlane("Test your knowledge here ('R' to reset)", "white", 50, "interactable", 15, 1, -9, 3, -7, "", scene)
+        interactableText.setRotation(new Vector3(0, -Math.PI / 2, 0))
+
+
+        const H2 = await MeshExt.CreateExtModel(new MeshExt("m4", scene), "m4", this.data);
+        const O2 = await MeshExt.CreateExtModel(new MeshExt("m6", scene), "m6", this.data);
+        const H2O = await MeshExt.CreateExtModel(new MeshExt("m3", scene), "m3", this.data);
+
+        this.molecules.push(H2)
+        this.molecules.push(O2)
+        this.molecules.push(H2O)
+
+        H2.position = new Vector3(-7, 0, -4)
+        O2.position = new Vector3(-7, 0, 0)
+        H2O.position.z = -20 //out of map first
+
+        //this.createParticles(H2.position, scene)
+
+        this.gizmoManager.attachableMeshes = this.molecules
+
+        for (const mesh of this.molecules) {
+            // Method 1: use behaviours
+            const pointerDragBehaviour = new PointerDragBehavior({
+                dragPlaneNormal: new Vector3(1, 0, 0), // pointing in positive z direction,
+            })
+            //behaviours are abstraction over observables, use observables for more specific control (onStart, onEnd)
+            pointerDragBehaviour.onDragStartObservable.add(evtData => {
+                if (this.isRotating) {
+                    // Handle rotation
+                    this.gizmoManager.attachableMeshes = this.molecules
+                    console.log("Rotate start: object id = " + mesh.id)
+                    console.log(this.gizmoManager.attachableMeshes)
+                    this.gizmoManager.positionGizmoEnabled = false
+                    this.gizmoManager.scaleGizmoEnabled = false
+                    this.gizmoManager.rotationGizmoEnabled = true
+                    //gizmoManager.dispose();
+
+                }
+                else {
+                    // Handle dragging
+                    console.log("Drag start: object id = " + mesh.id)
+                    this.gizmoManager.rotationGizmoEnabled = false
+                    this.gizmoManager.isHovered
+                    this.gizmoManager.attachableMeshes = [];
+                }
+                console.log(evtData);
+
+            })
+
+            mesh.addBehavior(pointerDragBehaviour)
+
+            //both pointers scaling (pinch)
+            const multiPointerScaleBehaviour = new MultiPointerScaleBehavior()
+            mesh.addBehavior(multiPointerScaleBehaviour)
+
+            //more behaviours
+            //default gizmo
+            //const gizmoManager = new GizmoManager(scene)
+            //gizmoManager.positionGizmoEnabled = true
+            //gizmoManager.rotationGizmoEnabled = true
+            //gizmoManager.boundingBoxGizmoEnabled = true
+        }
+
+
+
 
         //use observables
         // 1. create an observable for detecing intersections
         const onIntersectionObservable = new Observable<Boolean>()
         scene.registerBeforeRender(function () {
-            if (scene.activeCamera.position.y < 0.4 || scene.activeCamera.position.y > 0.6) //threshold for height
-                scene.activeCamera.position.y = 0.5
+            //if (scene.activeCamera.position.y < 0.4 || scene.activeCamera.position.y > 0.6) //threshold for height
+            scene.activeCamera.position.y = 0.5
             //const isIntersecting = 
         })
     }
@@ -238,11 +322,11 @@ export class App {
         }
     }
 
-    createParticles(scene: Scene) {
+    createParticles(pos: Vector3, scene: Scene) {
         const particleSystem = new ParticleSystem("particles", 5000, scene)
         particleSystem.particleTexture = new Texture("assets/textures/flare.png", scene)
 
-        particleSystem.emitter = new Vector3(0, 0, 0)
+        particleSystem.emitter = pos
         particleSystem.minEmitBox = new Vector3(0, 0, 0)
         particleSystem.maxEmitBox = new Vector3(0, 0, 0) //a point
 
@@ -318,5 +402,34 @@ export class App {
                 }
             }
         })
+    }
+
+    addGlobalInputs(scene: Scene) {
+
+        // Listen for double-tap events to change to rotate mode
+        scene.onPointerObservable.add((pointerInfo) => {
+            if (
+                pointerInfo.type === PointerEventTypes.POINTERDOUBLETAP &&
+                pointerInfo.event.button === 0
+            ) {
+                // Toggle rotation mode
+                this.isRotating = !this.isRotating;
+                console.log("Rotation mode: " + this.isRotating);
+            }
+        });
+
+        //KEYBOARD SUPPORT!
+        scene.actionManager.registerAction(
+            new ExecuteCodeAction(
+                {
+                    trigger: ActionManager.OnKeyUpTrigger,
+                    parameter: "r",
+                },
+                () => {
+                    console.log("Reset was pressed!")
+                    this.resetInteractableSection(scene)
+                }
+            )
+        )
     }
 }
