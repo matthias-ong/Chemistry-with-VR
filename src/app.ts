@@ -250,7 +250,7 @@ export class App {
                     this.gizmoManager.attachableMeshes = this.molecules
                     console.log("Rotate start: object id = " + mesh.id)
                     this.gizmoManager.positionGizmoEnabled = false
-                    this.gizmoManager.scaleGizmoEnabled = false
+                    this.gizmoManager.scaleGizmoEnabled = true
                     this.gizmoManager.rotationGizmoEnabled = true
 
                     //gizmoManager.dispose();
@@ -260,6 +260,7 @@ export class App {
                     // Handle dragging
                     console.log("Drag start: object id = " + mesh.id)
                     this.gizmoManager.rotationGizmoEnabled = false
+                    this.gizmoManager.scaleGizmoEnabled = false
                     this.gizmoManager.attachableMeshes = [];
                 }
                 console.log(evtData);
