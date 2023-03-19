@@ -5,7 +5,7 @@ By: Matthias Ong Si En (2000987)
 ## Introduction
 This project exports into an [**XRAuthor**](https://hub.docker.com/r/immersification/xrauthor) extension. Please follow the instructions on the Docker Hub to install XRAuthor first, alternatively, you may run this as a standalone app inside dist/app folder. Although you need to host a Python server locally for that. 
 
-This projects creates a 3D VR scene in order to teach students about Chemistry, specifically synthesis reactions. The 3D scene takes place in a classroom, there is a video screen that plays a recorded lecture in the event the student get stuck. The main interaction area is where students will combine the molecules into H2O using what they learnt to apply their knowledge. Screenshots are shown below.
+This projects creates a 3D VR scene in order to teach students about Chemistry, specifically synthesis reactions. The 3D scene takes place in a classroom, there is a video screen that plays a recorded lecture in the event the student get stuck. The main practice area is where students will combine the molecules into H2O using what they learnt to apply their knowledge. Screenshots are shown below.
 **Tutorial area**:
 ![](https://github.com/ToM4tto/CSD3120-IPA/blob/main/screenshots/tutorial.png)
 **Practice area**:

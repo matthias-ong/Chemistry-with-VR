@@ -113,6 +113,7 @@ export class App {
 
         //Gizmo support
         this.gizmoManager = new GizmoManager(scene)
+        this.gizmoManager.scaleRatio = 0.5
 
         //Keyboard support!
         this.addGlobalInputs(scene)
@@ -135,7 +136,9 @@ export class App {
 
         //tutorialAnimation.initCollisionAction("m3: H2O", "m4: H2")
 
-        const tutorialText = new TextPlane("Tutorial: Can't remember? Click on the video to play/pause", "white", 50, "tutorial", 16, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y, tutorialVideoPlane.pos.z, "", scene)
+        const synthesis = new TextPlane("Synthesis", "black", 40, "tutorial", 16, 1, tutorialVideoPlane.pos.x - 4.5, tutorialVideoPlane.pos.y - 1, tutorialVideoPlane.pos.z + 0.5, "", scene)
+
+        const tutorialText = new TextPlane("Tutorial: Can't remember? Click on the video to play/pause", "white", 40, "tutorial", 16, 1, tutorialVideoPlane.pos.x, tutorialVideoPlane.pos.y, tutorialVideoPlane.pos.z, "", scene)
 
         // ---------------- VIDEO CONTROLS (PAUSE PLAY) ----------------
         //VideoTexture is not part of gui need implement controls manually as observers of scene
@@ -209,10 +212,10 @@ export class App {
      */
     async setUpInteractableSection(scene: Scene) {
 
-        const interactableText = new TextPlane("Practice here ('R' to reset for keyboard), refer to tutorial if you are lost", "white", 50, "interactable", 18, 1, -9, 3, -7, "", scene)
+        const interactableText = new TextPlane("Practice here ('R' to reset for keyboard), refer to tutorial if you are lost", "white", 40, "interactable", 18, 1, -9, 3, -7, "", scene)
         interactableText.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
-        const hint = new TextPlane("Synthesize Water! Turn on audio!", "lightblue", 50, "hint", 15, 1, -9, 2, -7, "", scene)
+        const hint = new TextPlane("Synthesize Water! Turn on audio!", "lightblue", 40, "hint", 15, 1, -9, 2, -7, "", scene)
         hint.setRotation(new Vector3(0, -Math.PI / 2, 0))
 
         const reset = new TextPlane("Click to Reset", "red", 50, "reset", 5, 1, -9, 1, -15, "", scene)
