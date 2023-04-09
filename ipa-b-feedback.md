@@ -2,7 +2,7 @@
                                         
 **OVERALL IPA-A + IPA-B Grade**: A
 
-**IPA-B Grade**: B+
+**IPA-B Grade**: A
                                         
 ## B1
 complete 3D scene (with (a) a background environment or live video feed and (b) manipulable objects) and clear consistent theme
@@ -26,3 +26,6 @@ both desktop and an additional form of locomotion interaction exist and works we
 decent interactions but very buggy, e.g., rendering is extremely choppy
 double-click gizmos rather buggy in desktop and doesn't trigger in HMD
 the interactions did not cater for the HMD experience
+
+## Integration BONUS
+can load in XRAuthor interface and utilize authoring data in the scene via APIs
