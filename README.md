@@ -1,7 +1,3 @@
-# CSD3120 IPA
-IPA for CSD3120 VR<br/>
-By: Matthias Ong Si En (2000987)
-
 ## Introduction
 This project exports into an [**XRAuthor**](https://hub.docker.com/r/immersification/xrauthor) extension. Please follow the instructions on the Docker Hub to install XRAuthor first, alternatively, you may run this as a standalone app inside dist/app folder. Although you need to host a Python server locally for that. 
 
